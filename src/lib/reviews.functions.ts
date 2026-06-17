@@ -25,7 +25,7 @@ export const getProductReviews = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data }): Promise<ReviewRow[]> => {
-    const sb = publicClient();
+    const sb = publicClient() as unknown as { from: (t: string) => any };
     const { data: rows, error } = await sb
       .from("reviews")
       .select("id, product_handle, customer_name, rating, review_text, created_at")
@@ -49,7 +49,8 @@ export const getOrderByToken = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data }): Promise<OrderForReview | null> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
     const { data: order } = await supabaseAdmin
       .from("orders")
       .select("id, customer_email, items")
@@ -76,7 +77,8 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data }): Promise<{ token: string | null }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
     const { data: order } = await supabaseAdmin
       .from("orders")
       .select("review_token")
@@ -106,7 +108,8 @@ export const submitReview = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }): Promise<{ ok: true } | { error: string }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
     const { data: order } = await supabaseAdmin
       .from("orders")
       .select("id, items")
