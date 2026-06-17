@@ -9,7 +9,7 @@ import {
 } from "@/lib/products";
 import { toast } from "sonner";
 import { importShopifyCSV } from "@/lib/shopifyImport";
-import { Check, Loader2, Minus, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, Minus, Plus, X } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
