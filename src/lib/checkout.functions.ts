@@ -8,6 +8,7 @@ import {
 type LineItemInput = {
   title: string;
   size: string;
+  handle?: string;
   image?: string;
   unitAmount: number; // cents
   quantity: number;
