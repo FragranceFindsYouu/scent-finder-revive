@@ -26,7 +26,7 @@ export function EditModeFloatingToggle() {
   return (
     <button
       onClick={() => setEditMode(!editMode)}
-      className={`fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-5 py-3 text-xs uppercase tracking-[0.2em] shadow-lg transition-colors ${
+      className={`fixed bottom-6 left-6 z-50 inline-flex items-center gap-2 rounded-full px-5 py-3 text-xs uppercase tracking-[0.2em] shadow-lg transition-colors ${
         editMode
           ? "bg-rose text-primary-foreground hover:bg-bordeaux"
           : "bg-primary text-primary-foreground hover:bg-rose"

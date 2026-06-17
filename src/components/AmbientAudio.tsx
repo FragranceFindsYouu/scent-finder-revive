@@ -22,7 +22,7 @@ export function AmbientAudio() {
     const ctx = new AC();
     ctxRef.current = ctx;
 
-    // Brown noise buffer (≈4s, looped) — softer & deeper than white noise = waterfall.
+    // Brown noise buffer (≈4s, looped) — deep cascade rumble.
     const bufferSize = ctx.sampleRate * 4;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -33,32 +33,53 @@ export function AmbientAudio() {
       data[i] = lastOut * 3.5;
     }
 
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    // Gentle low-pass = water flowing rather than static.
+    // Deep cascade layer
+    const cascade = ctx.createBufferSource();
+    cascade.buffer = buffer;
+    cascade.loop = true;
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
-    lp.frequency.value = 900;
+    lp.frequency.value = 700;
     lp.Q.value = 0.7;
 
     // Slow LFO on filter cutoff = subtle "waves" in the cascade.
     const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.08;
+    lfo.frequency.value = 0.07;
     const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 220;
+    lfoGain.gain.value = 180;
     lfo.connect(lfoGain).connect(lp.frequency);
+
+    // Splash layer — same buffer, higher band = water hitting rocks.
+    const splash = ctx.createBufferSource();
+    splash.buffer = buffer;
+    splash.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 2400;
+    bp.Q.value = 0.9;
+    const splashGain = ctx.createGain();
+    splashGain.gain.value = 0.35;
+
+    // Gentle shimmer LFO on splash band
+    const lfo2 = ctx.createOscillator();
+    lfo2.frequency.value = 0.18;
+    const lfo2Gain = ctx.createGain();
+    lfo2Gain.gain.value = 600;
+    lfo2.connect(lfo2Gain).connect(bp.frequency);
 
     const master = ctx.createGain();
     master.gain.value = 0;
     gainRef.current = master;
 
-    noise.connect(lp).connect(master).connect(ctx.destination);
-    noise.start();
+    cascade.connect(lp).connect(master);
+    splash.connect(bp).connect(splashGain).connect(master);
+    master.connect(ctx.destination);
+    cascade.start();
+    splash.start();
     lfo.start();
+    lfo2.start();
 
-    nodesRef.current = [noise, lfo, lfoGain, lp, master];
+    nodesRef.current = [cascade, splash, lfo, lfo2, lfoGain, lfo2Gain, lp, bp, splashGain, master];
 
     // Fade in
     const now = ctx.currentTime;
