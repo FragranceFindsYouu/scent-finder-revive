@@ -2,7 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { productsQueryOptions, type Product } from "@/lib/products";
+import {
+  productsQueryOptions,
+  SIZE_OPTIONS,
+  type Product,
+  type SizeOption,
+} from "@/lib/products";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
@@ -23,14 +28,28 @@ function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+type VariantDraft = {
+  key: string;
+  size: SizeOption;
+  price: string;
+  stock_count: string;
+};
+
 const emptyForm = {
   title: "",
-  price: "",
   description: "",
   image_url: "",
   category: "",
-  inventory_count: "10",
 };
+
+function makeVariant(size: SizeOption): VariantDraft {
+  return {
+    key: crypto.randomUUID(),
+    size,
+    price: "",
+    stock_count: "10",
+  };
+}
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -39,6 +58,7 @@ function AdminDashboard() {
   const { data: products = [], isLoading } = useQuery(productsQueryOptions);
 
   const [form, setForm] = useState(emptyForm);
+  const [variants, setVariants] = useState<VariantDraft[]>([makeVariant("5ml")]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
@@ -65,7 +85,6 @@ function AdminDashboard() {
       toast.error(upErr.message);
       return;
     }
-    // Bucket is private; create a long-lived signed URL (10 years).
     const { data: signed, error: sErr } = await supabase.storage
       .from("product-images")
       .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
@@ -95,38 +114,88 @@ function AdminDashboard() {
     [products, search]
   );
 
+  function updateVariant(key: string, patch: Partial<VariantDraft>) {
+    setVariants((vs) => vs.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+  }
+
+  function addVariant() {
+    const used = new Set(variants.map((v) => v.size));
+    const nextSize = SIZE_OPTIONS.find((s) => !used.has(s)) ?? SIZE_OPTIONS[0];
+    setVariants((vs) => [...vs, makeVariant(nextSize)]);
+  }
+
+  function removeVariant(key: string) {
+    setVariants((vs) => (vs.length === 1 ? vs : vs.filter((v) => v.key !== key)));
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    const price = parseFloat(form.price);
-    const inventory = parseInt(form.inventory_count || "0", 10);
     if (!form.title.trim()) return toast.error("Product name is required.");
-    if (Number.isNaN(price) || price < 0) return toast.error("Enter a valid price.");
+    if (variants.length === 0) return toast.error("Add at least one size.");
+
+    const parsed: { size: string; price: number; stock_count: number }[] = [];
+    const seen = new Set<string>();
+    for (const v of variants) {
+      if (seen.has(v.size)) return toast.error(`Duplicate size: ${v.size}.`);
+      seen.add(v.size);
+      const price = parseFloat(v.price);
+      const stock = parseInt(v.stock_count || "0", 10);
+      if (Number.isNaN(price) || price < 0)
+        return toast.error(`Enter a valid price for ${v.size}.`);
+      if (Number.isNaN(stock) || stock < 0)
+        return toast.error(`Enter a valid stock for ${v.size}.`);
+      parsed.push({ size: v.size, price, stock_count: stock });
+    }
+
+    const basePrice = Math.min(...parsed.map((v) => v.price));
+    const totalInventory = parsed.reduce((sum, v) => sum + v.stock_count, 0);
 
     setSaving(true);
     const handle = slugify(form.title);
-    const { error } = await supabase.from("products").insert({
-      title: form.title.trim(),
-      handle,
-      price,
-      description: form.description.trim(),
-      image: form.image_url.trim(),
-      image_url: form.image_url.trim(),
-      category: form.category.trim(),
-      inventory_count: inventory,
-      available: inventory > 0,
-    });
-    setSaving(false);
+    const { data: product, error } = await supabase
+      .from("products")
+      .insert({
+        title: form.title.trim(),
+        handle,
+        price: basePrice,
+        description: form.description.trim(),
+        image: form.image_url.trim(),
+        image_url: form.image_url.trim(),
+        category: form.category.trim(),
+        inventory_count: totalInventory,
+        available: totalInventory > 0,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      if (error.code === "23505") {
+    if (error || !product) {
+      setSaving(false);
+      if (error?.code === "23505") {
         toast.error("A product with that name already exists.");
         return;
       }
-      toast.error(error.message);
+      toast.error(error?.message || "Could not save product.");
       return;
     }
-    toast.success("Product saved.");
+
+    const variantRows = parsed.map((v, i) => ({
+      product_id: product.id,
+      size: v.size,
+      price: v.price,
+      stock_count: v.stock_count,
+      sort_order: i,
+    }));
+
+    const { error: vErr } = await supabase.from("product_variants").insert(variantRows);
+    setSaving(false);
+
+    if (vErr) {
+      toast.error(`Product saved but sizes failed: ${vErr.message}`);
+    } else {
+      toast.success("Product saved.");
+    }
     setForm(emptyForm);
+    setVariants([makeVariant("5ml")]);
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
 
@@ -185,8 +254,7 @@ function AdminDashboard() {
         </button>
       </div>
 
-      <div className="mt-10 grid lg:grid-cols-[420px_1fr] gap-10">
-        {/* Add Product Form */}
+      <div className="mt-10 grid lg:grid-cols-[460px_1fr] gap-10">
         <form
           onSubmit={handleSave}
           className="rounded-xl border border-border p-6 space-y-4 h-fit bg-card"
@@ -201,21 +269,6 @@ function AdminDashboard() {
               required
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Price ($) *
-            </span>
-            <input
-              required
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.price}
-              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
               className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
             />
           </label>
@@ -254,34 +307,88 @@ function AdminDashboard() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Category
+            </span>
+            <input
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+            />
+          </label>
+
+          {/* Variants */}
+          <div className="pt-2 border-t border-border space-y-3">
+            <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Category
+                Sizes & pricing *
               </span>
-              <input
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Inventory
-              </span>
-              <input
-                type="number"
-                min="0"
-                value={form.inventory_count}
-                onChange={(e) => setForm((f) => ({ ...f, inventory_count: e.target.value }))}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-              />
-            </label>
+              <button
+                type="button"
+                onClick={addVariant}
+                disabled={variants.length >= SIZE_OPTIONS.length}
+                className="rounded-full border border-border px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-primary disabled:opacity-50"
+              >
+                + Add Size
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {variants.map((v) => (
+                <div
+                  key={v.key}
+                  className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center"
+                >
+                  <select
+                    value={v.size}
+                    onChange={(e) =>
+                      updateVariant(v.key, { size: e.target.value as SizeOption })
+                    }
+                    className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                  >
+                    {SIZE_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Price"
+                    value={v.price}
+                    onChange={(e) => updateVariant(v.key, { price: e.target.value })}
+                    className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Stock"
+                    value={v.stock_count}
+                    onChange={(e) =>
+                      updateVariant(v.key, { stock_count: e.target.value })
+                    }
+                    className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(v.key)}
+                    disabled={variants.length === 1}
+                    aria-label="Remove size"
+                    className="text-muted-foreground hover:text-destructive disabled:opacity-30 px-2 text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploading}
             className="w-full rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save Product"}
@@ -305,7 +412,7 @@ function AdminDashboard() {
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.15em] text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Product</th>
-                  <th className="px-4 py-3 font-medium">Price</th>
+                  <th className="px-4 py-3 font-medium">Sizes</th>
                   <th className="px-4 py-3 font-medium">Stock</th>
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
@@ -316,37 +423,55 @@ function AdminDashboard() {
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">No products yet.</td></tr>
                 ) : (
-                  filtered.map((p) => (
-                    <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-muted/20">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-10 shrink-0 overflow-hidden rounded bg-white">
-                            {(p.image_url || p.image) && (
-                              <img src={p.image_url || p.image} alt={p.title} className="h-full w-full object-cover" />
-                            )}
+                  filtered.map((p) => {
+                    const totalStock = p.variants.length
+                      ? p.variants.reduce((s, v) => s + v.stock_count, 0)
+                      : p.inventory_count;
+                    return (
+                      <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-muted/20 align-top">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-10 shrink-0 overflow-hidden rounded bg-white">
+                              {(p.image_url || p.image) && (
+                                <img src={p.image_url || p.image} alt={p.title} className="h-full w-full object-cover" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium text-foreground">{p.title}</div>
+                              {p.category && (
+                                <div className="text-xs text-muted-foreground">{p.category}</div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-medium text-foreground">{p.title}</div>
-                            {p.category && (
-                              <div className="text-xs text-muted-foreground">{p.category}</div>
-                            )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {p.variants.length === 0 ? (
+                            <span className="text-rose">${p.price.toFixed(2)}</span>
+                          ) : (
+                            <div className="space-y-0.5">
+                              {p.variants.map((v) => (
+                                <div key={v.id}>
+                                  <span className="text-foreground">{v.size}</span>{" "}
+                                  <span className="text-rose">${v.price.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{totalStock}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => handleDelete(p)}
+                              className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
+                            >
+                              Delete
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-rose">${p.price.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.inventory_count}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => handleDelete(p)}
-                            className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
