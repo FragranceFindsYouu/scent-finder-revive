@@ -1,5 +1,5 @@
 export type Fragrance = { title: string; handle: string; price: string; image: string; available: boolean };
-export const SHOP_URL = "https://fragrancefindsyou.com";
+
 export const fragrances: Fragrance[] = [
   {
     "title": "1 Million Elixir",

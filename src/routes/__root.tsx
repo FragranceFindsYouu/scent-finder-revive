@@ -15,6 +15,8 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { AmbientAudio } from "../components/AmbientAudio";
 import { Toaster } from "../components/ui/sonner";
+import { CartProvider } from "../lib/cart";
+import { CartDrawer } from "../components/CartDrawer";
 
 function NotFoundComponent() {
   return (
@@ -106,15 +108,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-      </div>
-      <AmbientAudio />
-      <Toaster />
+      <CartProvider>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+        <CartDrawer />
+        <AmbientAudio />
+        <Toaster />
+      </CartProvider>
     </QueryClientProvider>
   );
 }
