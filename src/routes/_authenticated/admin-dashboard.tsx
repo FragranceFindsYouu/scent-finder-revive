@@ -4,22 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { productsQueryOptions, type Product } from "@/lib/products";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin-dashboard")({
   head: () => ({
     meta: [
-      { title: "Admin — Fragrance Finds You" },
+      { title: "Admin Dashboard — Fragrance Finds You" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: AdminPage,
+  component: AdminDashboard,
 });
 
 function slugify(s: string) {
@@ -30,36 +23,24 @@ function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-type FormState = {
-  id: string | null;
-  title: string;
-  handle: string;
-  price: string;
-  image: string;
-  available: boolean;
-};
-
-const emptyForm: FormState = {
-  id: null,
+const emptyForm = {
   title: "",
-  handle: "",
   price: "",
-  image: "",
-  available: true,
+  description: "",
+  image_url: "",
+  category: "",
+  inventory_count: "10",
 };
 
-function AdminPage() {
+function AdminDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-
   const { data: products = [], isLoading } = useQuery(productsQueryOptions);
 
-  const [search, setSearch] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [handleEdited, setHandleEdited] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -74,67 +55,42 @@ function AdminPage() {
   }, []);
 
   const filtered = useMemo(
-    () =>
-      products.filter((p) =>
-        p.title.toLowerCase().includes(search.toLowerCase())
-      ),
+    () => products.filter((p) => p.title.toLowerCase().includes(search.toLowerCase())),
     [products, search]
   );
-
-  function openCreate() {
-    setForm(emptyForm);
-    setHandleEdited(false);
-    setDialogOpen(true);
-  }
-
-  function openEdit(p: Product) {
-    setForm({
-      id: p.id,
-      title: p.title,
-      handle: p.handle,
-      price: String(p.price),
-      image: p.image,
-      available: p.available,
-    });
-    setHandleEdited(true);
-    setDialogOpen(true);
-  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     const price = parseFloat(form.price);
-    if (!form.title.trim()) return toast.error("Title is required.");
+    const inventory = parseInt(form.inventory_count || "0", 10);
+    if (!form.title.trim()) return toast.error("Product name is required.");
     if (Number.isNaN(price) || price < 0) return toast.error("Enter a valid price.");
-    const handle = (form.handle.trim() || slugify(form.title));
 
     setSaving(true);
-    const payload = {
+    const handle = slugify(form.title);
+    const { error } = await supabase.from("products").insert({
       title: form.title.trim(),
       handle,
       price,
-      image: form.image.trim(),
-      available: form.available,
-    };
-
-    let error;
-    if (form.id) {
-      ({ error } = await supabase.from("products").update(payload).eq("id", form.id));
-    } else {
-      ({ error } = await supabase.from("products").insert(payload));
-    }
+      description: form.description.trim(),
+      image: form.image_url.trim(),
+      image_url: form.image_url.trim(),
+      category: form.category.trim(),
+      inventory_count: inventory,
+      available: inventory > 0,
+    });
     setSaving(false);
 
     if (error) {
       if (error.code === "23505") {
-        toast.error("That handle is already used by another product.");
+        toast.error("A product with that name already exists.");
         return;
       }
       toast.error(error.message);
       return;
     }
-
-    toast.success(form.id ? "Product updated." : "Product added.");
-    setDialogOpen(false);
+    toast.success("Product saved.");
+    setForm(emptyForm);
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
 
@@ -146,18 +102,6 @@ function AdminPage() {
       return;
     }
     toast.success("Product deleted.");
-    queryClient.invalidateQueries({ queryKey: ["products"] });
-  }
-
-  async function toggleAvailable(p: Product) {
-    const { error } = await supabase
-      .from("products")
-      .update({ available: !p.available })
-      .eq("id", p.id);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
 
@@ -174,7 +118,7 @@ function AdminPage() {
         <div className="max-w-md">
           <h1 className="font-display text-3xl text-primary">Not authorized</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            This account doesn't have admin access. Only the store owner can manage products.
+            This account doesn't have admin access.
           </p>
           <button
             onClick={signOut}
@@ -191,186 +135,184 @@ function AdminPage() {
     <div className="mx-auto max-w-7xl px-6 lg:px-10 py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-rose">Admin</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-rose">Admin Dashboard</p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl text-primary">Manage products</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {products.length} products · changes appear instantly on your store.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <button
+          onClick={signOut}
+          className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+        >
+          Sign out
+        </button>
+      </div>
+
+      <div className="mt-10 grid lg:grid-cols-[420px_1fr] gap-10">
+        {/* Add Product Form */}
+        <form
+          onSubmit={handleSave}
+          className="rounded-xl border border-border p-6 space-y-4 h-fit bg-card"
+        >
+          <h2 className="font-display text-2xl text-primary">Add new product</h2>
+
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Product name *
+            </span>
+            <input
+              required
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Price ($) *
+            </span>
+            <input
+              required
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.price}
+              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Description
+            </span>
+            <textarea
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose resize-none"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Image URL
+            </span>
+            <input
+              value={form.image_url}
+              onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+              placeholder="https://…"
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+            />
+          </label>
+
+          {form.image_url && (
+            <div className="h-32 w-24 overflow-hidden rounded bg-white">
+              <img src={form.image_url} alt="preview" className="h-full w-full object-cover" />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Category
+              </span>
+              <input
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Inventory
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={form.inventory_count}
+                onChange={(e) => setForm((f) => ({ ...f, inventory_count: e.target.value }))}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+              />
+            </label>
+          </div>
+
           <button
-            onClick={openCreate}
-            className="rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
+            type="submit"
+            disabled={saving}
+            className="w-full rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose disabled:opacity-60"
           >
-            + Add product
+            {saving ? "Saving…" : "Save Product"}
           </button>
-          <button
-            onClick={signOut}
-            className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
-          >
-            Sign out
-          </button>
+        </form>
+
+        {/* Active Products Table */}
+        <div>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="font-display text-2xl text-primary">Active products</h2>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search…"
+              className="bg-transparent border-b border-border focus:border-rose outline-none py-1.5 text-sm placeholder:text-muted-foreground"
+            />
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                  <th className="px-4 py-3 font-medium">Product</th>
+                  <th className="px-4 py-3 font-medium">Price</th>
+                  <th className="px-4 py-3 font-medium">Stock</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">No products yet.</td></tr>
+                ) : (
+                  filtered.map((p) => (
+                    <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-muted/20">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-10 shrink-0 overflow-hidden rounded bg-white">
+                            {(p.image_url || p.image) && (
+                              <img src={p.image_url || p.image} alt={p.title} className="h-full w-full object-cover" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-foreground">{p.title}</div>
+                            {p.category && (
+                              <div className="text-xs text-muted-foreground">{p.category}</div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-rose">${p.price.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.inventory_count}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleDelete(p)}
+                            className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search products…"
-        className="mt-10 w-full max-w-sm bg-transparent border-b border-border focus:border-rose outline-none py-2 text-sm placeholder:text-muted-foreground"
-      />
-
-      <div className="mt-6 overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.15em] text-muted-foreground">
-              <th className="px-4 py-3 font-medium">Product</th>
-              <th className="px-4 py-3 font-medium">Handle</th>
-              <th className="px-4 py-3 font-medium">Price</th>
-              <th className="px-4 py-3 font-medium">In stock</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No products found.</td></tr>
-            ) : (
-              filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-muted/20">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-10 shrink-0 overflow-hidden rounded bg-white">
-                        {p.image && (
-                          <img src={p.image} alt={p.title} className="h-full w-full object-cover" />
-                        )}
-                      </div>
-                      <span className="font-medium text-foreground">{p.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.handle}</td>
-                  <td className="px-4 py-3 text-rose">${p.price.toFixed(2)}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => toggleAvailable(p)}
-                      className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.15em] ${
-                        p.available
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {p.available ? "In stock" : "Sold out"}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="rounded-full border border-border px-4 py-1.5 text-xs uppercase tracking-[0.15em] hover:bg-muted"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p)}
-                        className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl">
-              {form.id ? "Edit product" : "Add product"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4">
-            <label className="block">
-              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Title</span>
-              <input
-                required
-                value={form.title}
-                onChange={(e) => {
-                  const title = e.target.value;
-                  setForm((f) => ({
-                    ...f,
-                    title,
-                    handle: handleEdited ? f.handle : slugify(title),
-                  }));
-                }}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Handle (URL)</span>
-              <input
-                value={form.handle}
-                onChange={(e) => {
-                  setHandleEdited(true);
-                  setForm((f) => ({ ...f, handle: e.target.value }));
-                }}
-                placeholder="auto-generated from title"
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-              />
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
-                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Price ($)</span>
-                <input
-                  required
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.price}
-                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                  className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-                />
-              </label>
-              <label className="flex items-end gap-2 pb-2">
-                <input
-                  type="checkbox"
-                  checked={form.available}
-                  onChange={(e) => setForm((f) => ({ ...f, available: e.target.checked }))}
-                  className="accent-rose h-4 w-4"
-                />
-                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">In stock</span>
-              </label>
-            </div>
-            <label className="block">
-              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Image URL</span>
-              <input
-                value={form.image}
-                onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                placeholder="https://…"
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
-              />
-            </label>
-            {form.image && (
-              <div className="h-32 w-24 overflow-hidden rounded bg-white">
-                <img src={form.image} alt="preview" className="h-full w-full object-cover" />
-              </div>
-            )}
-            <DialogFooter>
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-xs uppercase tracking-[0.2em] hover:bg-rose disabled:opacity-60"
-              >
-                {saving ? "Saving…" : form.id ? "Save changes" : "Add product"}
-              </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
