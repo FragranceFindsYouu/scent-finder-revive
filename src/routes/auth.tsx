@@ -24,7 +24,7 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        navigate({ to: "/admin", replace: true });
+        navigate({ to: "/admin-dashboard", replace: true });
       } else {
         setChecking(false);
       }
@@ -39,7 +39,7 @@ function AuthPage() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/admin" },
+        options: { emailRedirectTo: window.location.origin + "/admin-dashboard" },
       });
       setLoading(false);
       if (error) {
@@ -47,7 +47,7 @@ function AuthPage() {
         return;
       }
       toast.success("Account created. You're signed in.");
-      navigate({ to: "/admin", replace: true });
+      navigate({ to: "/admin-dashboard", replace: true });
       return;
     }
 
@@ -57,7 +57,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    navigate({ to: "/admin", replace: true });
+    navigate({ to: "/admin-dashboard", replace: true });
   }
 
   if (checking) {
