@@ -63,12 +63,13 @@ function prettyHandle(h: string) {
 function ProductDetail() {
   const { handle } = Route.useParams();
   const { data: products } = useSuspenseQuery(productsQueryOptions);
-  const product = useMemo<Product | undefined>(
+  const found = useMemo<Product | undefined>(
     () => products.find((p) => p.handle === handle),
     [products, handle]
   );
 
-  if (!product) throw notFound();
+  if (!found) throw notFound();
+  const product: Product = found;
 
   const { addItem, openCart } = useCart();
   const variants = product.variants;
