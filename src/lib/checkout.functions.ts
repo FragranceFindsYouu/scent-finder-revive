@@ -74,6 +74,16 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         payment_intent_data: {
           description: `Fragrance Finds You — ${data.items.length} item${data.items.length === 1 ? "" : "s"}`,
         },
+        metadata: {
+          items: JSON.stringify(
+            data.items.map((i) => ({
+              h: i.handle ?? "",
+              t: i.title,
+              s: i.size,
+              q: i.quantity,
+            })),
+          ).slice(0, 500),
+        },
       });
 
       return { clientSecret: session.client_secret ?? "" };
