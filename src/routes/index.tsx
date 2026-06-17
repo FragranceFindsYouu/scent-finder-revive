@@ -82,9 +82,11 @@ function Home() {
             <EditableText id="home.hero.eyebrow" as="p" className="text-xs uppercase tracking-[0.3em] text-gold">
               An independent decanting house
             </EditableText>
-            <EditableText id="home.hero.heading" as="h1" className="mt-6 font-display text-5xl md:text-7xl lg:text-8xl leading-[1.02] text-white text-balance max-w-4xl drop-shadow-lg whitespace-pre-line block">
-              The right Fragrance finds you in Our Bottles
-            </EditableText>
+            <h1 className="mt-6 font-display text-5xl md:text-7xl lg:text-8xl leading-[1.02] text-white text-balance max-w-4xl drop-shadow-lg whitespace-pre-line block">
+              <EditableText id="home.hero.heading.pre" as="span">The right </EditableText>
+              <EditableText id="home.hero.heading.brand" as="span" className="text-rose">Fragrance Finds You</EditableText>
+              <EditableText id="home.hero.heading.post" as="span"> in Our Bottles</EditableText>
+            </h1>
             <EditableText id="home.hero.subtext" as="p" className="mt-6 max-w-xl text-base md:text-lg text-white/90 drop-shadow" multiline>
               {"Try designer and niche fragrances in decants — handpoured by Joan, That's truly you before committing to a full bottle. Fragrance Finds You is not associated with the brands you see <3"}
             </EditableText>
