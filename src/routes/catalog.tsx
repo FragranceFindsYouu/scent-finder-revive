@@ -28,7 +28,7 @@ function Catalog() {
     let list = products.filter((f) =>
       f.title.toLowerCase().includes(q.toLowerCase())
     );
-    if (inStockOnly) list = list.filter((f) => f.available);
+    if (inStockOnly) list = list.filter((f) => f.inventory_count > 0);
     list = [...list].sort((a, b) => {
       if (sort === "az") return a.title.localeCompare(b.title);
       if (sort === "za") return b.title.localeCompare(a.title);

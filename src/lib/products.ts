@@ -7,6 +7,10 @@ export type Product = {
   handle: string;
   price: number;
   image: string;
+  image_url: string;
+  description: string;
+  inventory_count: number;
+  category: string;
   available: boolean;
   sort_order: number;
 };
@@ -16,7 +20,7 @@ export const productsQueryOptions = queryOptions({
   queryFn: async (): Promise<Product[]> => {
     const { data, error } = await supabase
       .from("products")
-      .select("id, title, handle, price, image, available, sort_order")
+      .select("id, title, handle, price, image, image_url, description, inventory_count, category, available, sort_order")
       .order("sort_order", { ascending: true })
       .order("title", { ascending: true });
     if (error) throw error;
