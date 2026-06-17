@@ -74,7 +74,7 @@ function AdminOrdersPage() {
   const [confirmRefund, setConfirmRefund] = useState(false);
   const [refunding, setRefunding] = useState(false);
 
-  if (roleLoading) {
+  if (!ready) {
     return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-muted-foreground">Loading…</div>;
   }
   if (!isAdmin) {
