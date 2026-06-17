@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -135,12 +135,14 @@ function EditProductDialog({
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("10");
 
-  // sync state when opening
-  if (product && title === "" && description === "" && imageUrl === "") {
-    setTitle(product.title);
-    setDescription(product.description);
-    setImageUrl(product.image_url || product.image);
-  }
+  useEffect(() => {
+    if (product) {
+      setTitle(product.title);
+      setDescription(product.description);
+      setImageUrl(product.image_url || product.image);
+    }
+  }, [product?.id]);
+
 
   function reset() {
     setTitle("");
