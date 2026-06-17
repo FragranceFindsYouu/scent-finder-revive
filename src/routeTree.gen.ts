@@ -10,16 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
 
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CatalogRoute = CatalogRouteImport.update({
@@ -46,6 +53,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsHandleRoute = ProductsHandleRouteImport.update({
+  id: '/products/$handle',
+  path: '/products/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin-dashboard',
@@ -58,16 +70,20 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/products/$handle': typeof ProductsHandleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/products/$handle': typeof ProductsHandleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,8 +92,10 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/products/$handle': typeof ProductsHandleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,10 +104,20 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
+    | '/checkout'
     | '/contact'
     | '/admin-dashboard'
+    | '/products/$handle'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/auth' | '/catalog' | '/contact' | '/admin-dashboard'
+  to:
+    | '/'
+    | '/about'
+    | '/auth'
+    | '/catalog'
+    | '/checkout'
+    | '/contact'
+    | '/admin-dashboard'
+    | '/products/$handle'
   id:
     | '__root__'
     | '/'
@@ -97,8 +125,10 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
+    | '/checkout'
     | '/contact'
     | '/_authenticated/admin-dashboard'
+    | '/products/$handle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -107,7 +137,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   CatalogRoute: typeof CatalogRoute
+  CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  ProductsHandleRoute: typeof ProductsHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -117,6 +149,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/catalog': {
@@ -154,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products/$handle': {
+      id: '/products/$handle'
+      path: '/products/$handle'
+      fullPath: '/products/$handle'
+      preLoaderRoute: typeof ProductsHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin-dashboard': {
       id: '/_authenticated/admin-dashboard'
       path: '/admin-dashboard'
@@ -181,7 +227,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   CatalogRoute: CatalogRoute,
+  CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  ProductsHandleRoute: ProductsHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
