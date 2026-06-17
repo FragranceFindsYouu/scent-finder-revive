@@ -5,6 +5,7 @@ import { productsQueryOptions, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 import { EditableText } from "@/lib/siteSettings";
+import { ProductReviews } from "@/components/ProductReviews";
 
 export const Route = createFileRoute("/products/$handle")({
   loader: async ({ context }) => {
