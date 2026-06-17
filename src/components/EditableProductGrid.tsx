@@ -17,7 +17,7 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-export function EditableProductGrid({ products }: { products: Product[] }) {
+export function EditableProductGrid({ products, gridClassName }: { products: Product[]; gridClassName?: string }) {
   const { editMode } = useEditMode();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Product | null>(null);
@@ -53,7 +53,7 @@ export function EditableProductGrid({ products }: { products: Product[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+      <div className={gridClassName ?? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12"}>
         {editMode && (
           <button
             onClick={() => setAdding(true)}
