@@ -66,7 +66,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                 }
               }
 
-              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
+              const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
               const { error } = await supabaseAdmin.from("orders").upsert(
                 {
                   stripe_session_id: session.id,
