@@ -65,8 +65,8 @@ export const getOrderByToken = createServerFn({ method: "GET" })
       id: (order as { id: string }).id,
       customer_email: (order as { customer_email: string | null }).customer_email,
       items: ((order as { items: unknown }).items as OrderForReview["items"]) ?? [],
-      already_reviewed_handles: (existing ?? []).map(
-        (r) => (r as { product_handle: string }).product_handle,
+      already_reviewed_handles: ((existing ?? []) as Array<{ product_handle: string }>).map(
+        (r) => r.product_handle,
       ),
     };
   });
