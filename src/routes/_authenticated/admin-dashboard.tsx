@@ -232,6 +232,88 @@ function AdminDashboard() {
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
 
+  function openAddSize(productId: string) {
+    setAddSizeFor(productId);
+    setNewVariant({ size: "", price: "", stock: "10" });
+  }
+
+  function closeAddSize() {
+    setAddSizeFor(null);
+    setNewVariant({ size: "", price: "", stock: "10" });
+  }
+
+  async function confirmAddSize(p: Product) {
+    const size = newVariant.size.trim();
+    const price = parseFloat(newVariant.price);
+    const stock = parseInt(newVariant.stock || "0", 10);
+    if (!size) return toast.error("Pick or type a size.");
+    if (p.variants.some((v) => v.size.toLowerCase() === size.toLowerCase()))
+      return toast.error(`${size} already exists on this product.`);
+    if (Number.isNaN(price) || price < 0) return toast.error("Enter a valid price.");
+    if (Number.isNaN(stock) || stock < 0) return toast.error("Enter a valid stock.");
+
+    setAddingSize(true);
+    const nextOrder =
+      p.variants.reduce((m, v) => Math.max(m, v.sort_order), -1) + 1;
+    const { error } = await supabase.from("product_variants").insert({
+      product_id: p.id,
+      size,
+      price,
+      stock_count: stock,
+      sort_order: nextOrder,
+    });
+    setAddingSize(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Added ${size} to ${p.title}.`);
+    closeAddSize();
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  }
+
+  async function swapSortOrder(
+    table: "products" | "product_variants",
+    a: { id: string; sort_order: number },
+    b: { id: string; sort_order: number }
+  ) {
+    setReorderBusy(true);
+    // If they share the same sort_order, bump b to a+1 so the swap is meaningful.
+    const aOrder = a.sort_order;
+    const bOrder = a.sort_order === b.sort_order ? a.sort_order + 1 : b.sort_order;
+    const { error: e1 } = await supabase
+      .from(table)
+      .update({ sort_order: -1 })
+      .eq("id", a.id);
+    if (!e1) {
+      await supabase.from(table).update({ sort_order: aOrder }).eq("id", b.id);
+      await supabase.from(table).update({ sort_order: bOrder }).eq("id", a.id);
+    }
+    setReorderBusy(false);
+    if (e1) {
+      toast.error(e1.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  }
+
+  async function moveProduct(index: number, dir: -1 | 1) {
+    const list = filtered;
+    const target = list[index + dir];
+    const current = list[index];
+    if (!target || !current) return;
+    await swapSortOrder("products", current, target);
+  }
+
+  async function moveVariant(p: Product, index: number, dir: -1 | 1) {
+    const target = p.variants[index + dir];
+    const current = p.variants[index];
+    if (!target || !current) return;
+    await swapSortOrder("product_variants", current, target);
+  }
+
+
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
