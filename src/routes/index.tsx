@@ -10,6 +10,8 @@ import aboutImg from "@/assets/about-decants.jpg";
 
 import { productsQueryOptions } from "@/lib/products";
 import { FragranceCard } from "@/components/FragranceCard";
+import { EditableProductGrid } from "@/components/EditableProductGrid";
+import { useEditMode } from "@/lib/editMode";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,7 +27,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data: products = [] } = useQuery(productsQueryOptions);
-  const featured = products.slice(0, 8);
+  const { editMode } = useEditMode();
+  const featured = editMode ? products : products.slice(0, 8);
   const [subscribing, setSubscribing] = useState(false);
 
   async function handleSubscribe(e: React.FormEvent<HTMLFormElement>) {
@@ -103,9 +106,7 @@ function Home() {
             See all {products.length} scents →
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-          {featured.map((f) => <FragranceCard key={f.id} f={f} />)}
-        </div>
+        <EditableProductGrid products={featured} />
       </section>
 
       {/* About teaser */}
