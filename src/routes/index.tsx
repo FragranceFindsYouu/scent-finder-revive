@@ -27,7 +27,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data: products = [] } = useQuery(productsQueryOptions);
-  const featured = products.slice(0, 8);
+  const { editMode } = useEditMode();
+  const featured = editMode ? products : products.slice(0, 8);
   const [subscribing, setSubscribing] = useState(false);
 
   async function handleSubscribe(e: React.FormEvent<HTMLFormElement>) {
