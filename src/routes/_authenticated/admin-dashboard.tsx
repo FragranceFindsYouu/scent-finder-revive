@@ -9,6 +9,7 @@ import {
   type SizeOption,
 } from "@/lib/products";
 import { toast } from "sonner";
+import { importShopifyCSV } from "@/lib/shopifyImport";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
   head: () => ({
@@ -62,6 +63,41 @@ function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
+
+  async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!/\.csv$/i.test(file.name)) {
+      toast.error("Please upload a .csv file exported from Shopify.");
+      return;
+    }
+    setImporting(true);
+    setImportProgress({ done: 0, total: 0, title: "Parsing…" });
+    try {
+      const text = await file.text();
+      const result = await importShopifyCSV(text, (done, total, title) =>
+        setImportProgress({ done, total, title })
+      );
+      const parts = [
+        `${result.productsCreated} products created`,
+        `${result.variantsCreated} sizes added`,
+      ];
+      if (result.productsSkipped) parts.push(`${result.productsSkipped} skipped (already exist)`);
+      toast.success(`Import complete — ${parts.join(", ")}.`);
+      if (result.errors.length) {
+        toast.error(`${result.errors.length} row(s) had errors. First: ${result.errors[0]}`);
+      }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed.");
+    } finally {
+      setImporting(false);
+      setImportProgress(null);
+    }
+  }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
