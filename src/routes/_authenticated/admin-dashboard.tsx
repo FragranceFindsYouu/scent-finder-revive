@@ -437,6 +437,12 @@ function AdminDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/admin/orders"
+            className="rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
+          >
+            View orders
+          </Link>
           <label
             className={`cursor-pointer rounded-full border border-rose px-6 py-3 text-xs uppercase tracking-[0.2em] text-rose hover:bg-rose hover:text-primary-foreground ${
               importing ? "opacity-60 pointer-events-none" : ""
