@@ -610,13 +610,17 @@ function AdminDashboard() {
                         </div>
 
                         {p.variants.length > 0 && (
-                          <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                          <ul className="mt-3 space-y-2">
                             {p.variants.map((v) => {
                               const busy = stockBusy === v.id;
+                              const draft = draftFor(v.id, v.stock_count);
+                              const parsed = parseInt(draft || "0", 10);
+                              const dirty =
+                                !Number.isNaN(parsed) && parsed !== v.stock_count;
                               return (
-                                <div
+                                <li
                                   key={v.id}
-                                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2"
+                                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2"
                                 >
                                   <div className="text-sm">
                                     <span className="font-medium text-foreground">
@@ -625,30 +629,29 @@ function AdminDashboard() {
                                     <span className="text-rose">
                                       ${v.price.toFixed(2)}
                                     </span>
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      in stock: {v.stock_count}
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <button
                                       type="button"
                                       aria-label={`Decrease ${v.size} stock`}
-                                      disabled={busy || v.stock_count <= 0}
-                                      onClick={() => adjustStock(v.id, v.stock_count, -1)}
-                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                      disabled={busy || parsed <= 0}
+                                      onClick={() => bumpDraft(v.id, v.stock_count, -1)}
+                                      className="h-7 w-7 grid place-items-center rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
                                     >
-                                      −
+                                      <Minus size={14} />
                                     </button>
                                     <input
                                       type="number"
                                       min="0"
-                                      defaultValue={v.stock_count}
-                                      key={`${v.id}-${v.stock_count}`}
-                                      onBlur={(e) => {
-                                        if (parseInt(e.target.value, 10) !== v.stock_count) {
-                                          setStockExact(v.id, e.target.value);
-                                        }
-                                      }}
+                                      value={draft}
+                                      onChange={(e) => setDraft(v.id, e.target.value)}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
-                                          (e.target as HTMLInputElement).blur();
+                                          e.preventDefault();
+                                          saveStock(v.id, v.stock_count);
                                         }
                                       }}
                                       className="w-14 rounded-md border border-border bg-background px-2 py-1 text-center text-sm outline-none focus:border-rose"
@@ -657,17 +660,36 @@ function AdminDashboard() {
                                       type="button"
                                       aria-label={`Increase ${v.size} stock`}
                                       disabled={busy}
-                                      onClick={() => adjustStock(v.id, v.stock_count, 1)}
-                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                      onClick={() => bumpDraft(v.id, v.stock_count, 1)}
+                                      className="h-7 w-7 grid place-items-center rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
                                     >
-                                      +
+                                      <Plus size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label={`Save stock for ${v.size}`}
+                                      title="Save stock"
+                                      disabled={busy || !dirty}
+                                      onClick={() => saveStock(v.id, v.stock_count)}
+                                      className={`h-7 w-7 grid place-items-center rounded-full border ml-1 transition ${
+                                        dirty
+                                          ? "border-rose bg-rose text-primary-foreground hover:opacity-90"
+                                          : "border-border text-muted-foreground/50 cursor-not-allowed"
+                                      }`}
+                                    >
+                                      {busy ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                      ) : (
+                                        <Check size={14} />
+                                      )}
                                     </button>
                                   </div>
-                                </div>
+                                </li>
                               );
                             })}
-                          </div>
+                          </ul>
                         )}
+
                       </div>
                     </div>
                   </div>
