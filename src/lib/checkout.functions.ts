@@ -91,6 +91,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
+        payment_method_types: ["card"],
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
