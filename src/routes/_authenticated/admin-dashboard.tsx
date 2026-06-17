@@ -9,6 +9,7 @@ import {
   type SizeOption,
 } from "@/lib/products";
 import { toast } from "sonner";
+import { importShopifyCSV } from "@/lib/shopifyImport";
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
   head: () => ({
@@ -62,6 +63,41 @@ function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
+
+  async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!/\.csv$/i.test(file.name)) {
+      toast.error("Please upload a .csv file exported from Shopify.");
+      return;
+    }
+    setImporting(true);
+    setImportProgress({ done: 0, total: 0, title: "Parsing…" });
+    try {
+      const text = await file.text();
+      const result = await importShopifyCSV(text, (done, total, title) =>
+        setImportProgress({ done, total, title })
+      );
+      const parts = [
+        `${result.productsCreated} products created`,
+        `${result.variantsCreated} sizes added`,
+      ];
+      if (result.productsSkipped) parts.push(`${result.productsSkipped} skipped (already exist)`);
+      toast.success(`Import complete — ${parts.join(", ")}.`);
+      if (result.errors.length) {
+        toast.error(`${result.errors.length} row(s) had errors. First: ${result.errors[0]}`);
+      }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed.");
+    } finally {
+      setImporting(false);
+      setImportProgress(null);
+    }
+  }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -246,12 +282,32 @@ function AdminDashboard() {
             {products.length} products · changes appear instantly on your store.
           </p>
         </div>
-        <button
-          onClick={signOut}
-          className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
-        >
-          Sign out
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            className={`cursor-pointer rounded-full border border-rose px-6 py-3 text-xs uppercase tracking-[0.2em] text-rose hover:bg-rose hover:text-primary-foreground ${
+              importing ? "opacity-60 pointer-events-none" : ""
+            }`}
+          >
+            {importing
+              ? importProgress && importProgress.total > 0
+                ? `Importing ${importProgress.done}/${importProgress.total}…`
+                : "Importing…"
+              : "Bulk Import Shopify CSV"}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleShopifyImport}
+              disabled={importing}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={signOut}
+            className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div className="mt-10 grid lg:grid-cols-[460px_1fr] gap-10">
