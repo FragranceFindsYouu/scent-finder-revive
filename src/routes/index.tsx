@@ -131,9 +131,7 @@ function Home() {
               See all {products.length} scents →
             </Link>
           </div>
-          <div className={gridClass + " contents"}>
-            <EditableProductGrid products={featured} />
-          </div>
+          <EditableProductGrid products={featured} gridClassName={gridClass} />
         </section>
       )}
 
