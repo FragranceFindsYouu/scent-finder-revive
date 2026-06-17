@@ -20,6 +20,7 @@ import { CartDrawer } from "../components/CartDrawer";
 import { EditModeProvider, EditModeFloatingToggle } from "../lib/editMode";
 import { SiteSettingsProvider } from "../lib/siteSettings";
 import { LayoutCustomizer, ApplyBgTheme } from "../components/LayoutCustomizer";
+import { SprayIntro } from "../components/SprayIntro";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +116,7 @@ function RootComponent() {
         <SiteSettingsProvider>
           <EditModeProvider>
             <ApplyBgTheme />
+            <SprayIntro />
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">

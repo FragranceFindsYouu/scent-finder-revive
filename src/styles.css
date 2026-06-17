@@ -119,3 +119,63 @@
 @utility text-balance {
   text-wrap: balance;
 }
+
+/* ============ Spray intro animation ============ */
+@keyframes spray-fade-out {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes spray-bottle-pop {
+  0%   { transform: translate(-50%, -50%) scale(0.6) rotate(-8deg); opacity: 0; }
+  25%  { transform: translate(-50%, -50%) scale(1) rotate(-8deg); opacity: 1; }
+  45%  { transform: translate(-50%, -52%) scale(1) rotate(-8deg); }
+  55%  { transform: translate(-50%, -50%) scale(0.97) rotate(-8deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(-8deg); opacity: 1; }
+}
+@keyframes spray-particle-out {
+  0%   { transform: rotate(var(--angle)) translateX(0) scale(0.2); opacity: 0; }
+  20%  { opacity: 0.85; }
+  100% { transform: rotate(var(--angle)) translateX(var(--dist)) scale(1.4); opacity: 0; }
+}
+@keyframes spray-wash-in {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.spray-fade { animation: spray-fade-out 1.8s ease-out forwards; }
+.spray-wash {
+  background: radial-gradient(ellipse at center, rgba(247,210,122,0.35), rgba(247,210,122,0) 60%);
+  animation: spray-wash-in 1.6s ease-out forwards;
+}
+.spray-bottle-wrap {
+  animation: spray-bottle-pop 1.6s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.spray-mist-origin {
+  position: absolute;
+  top: 18px;   /* roughly at the nozzle */
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+}
+.spray-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size);
+  height: var(--size);
+  margin-left: calc(var(--size) / -2);
+  margin-top:  calc(var(--size) / -2);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(247,210,122,0.55) 45%, rgba(247,210,122,0) 75%);
+  filter: blur(2px);
+  opacity: 0;
+  transform-origin: 0 0;
+  animation: spray-particle-out 1.2s ease-out forwards;
+  animation-delay: var(--delay);
+}
+@media (prefers-reduced-motion: reduce) {
+  .spray-fade, .spray-wash, .spray-bottle-wrap, .spray-particle { animation: none !important; }
+  .spray-fade { display: none; }
+}
