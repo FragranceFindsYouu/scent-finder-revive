@@ -9,7 +9,7 @@ import {
 } from "@/lib/products";
 import { toast } from "sonner";
 import { importShopifyCSV } from "@/lib/shopifyImport";
-import { Check, Loader2, Minus, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, Minus, Plus, X } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
@@ -69,6 +69,11 @@ function AdminDashboard() {
   const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
   const [stockBusy, setStockBusy] = useState<string | null>(null);
   const [stockDrafts, setStockDrafts] = useState<Record<string, string>>({});
+  const [addSizeFor, setAddSizeFor] = useState<string | null>(null);
+  const [newVariant, setNewVariant] = useState({ size: "", price: "", stock: "10" });
+  const [addingSize, setAddingSize] = useState(false);
+  const [reorderBusy, setReorderBusy] = useState(false);
+
 
 
   async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -226,6 +231,88 @@ function AdminDashboard() {
     toast.success("Stock updated.");
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
+
+  function openAddSize(productId: string) {
+    setAddSizeFor(productId);
+    setNewVariant({ size: "", price: "", stock: "10" });
+  }
+
+  function closeAddSize() {
+    setAddSizeFor(null);
+    setNewVariant({ size: "", price: "", stock: "10" });
+  }
+
+  async function confirmAddSize(p: Product) {
+    const size = newVariant.size.trim();
+    const price = parseFloat(newVariant.price);
+    const stock = parseInt(newVariant.stock || "0", 10);
+    if (!size) return toast.error("Pick or type a size.");
+    if (p.variants.some((v) => v.size.toLowerCase() === size.toLowerCase()))
+      return toast.error(`${size} already exists on this product.`);
+    if (Number.isNaN(price) || price < 0) return toast.error("Enter a valid price.");
+    if (Number.isNaN(stock) || stock < 0) return toast.error("Enter a valid stock.");
+
+    setAddingSize(true);
+    const nextOrder =
+      p.variants.reduce((m, v) => Math.max(m, v.sort_order), -1) + 1;
+    const { error } = await supabase.from("product_variants").insert({
+      product_id: p.id,
+      size,
+      price,
+      stock_count: stock,
+      sort_order: nextOrder,
+    });
+    setAddingSize(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Added ${size} to ${p.title}.`);
+    closeAddSize();
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  }
+
+  async function swapSortOrder(
+    table: "products" | "product_variants",
+    a: { id: string; sort_order: number },
+    b: { id: string; sort_order: number }
+  ) {
+    setReorderBusy(true);
+    // If they share the same sort_order, bump b to a+1 so the swap is meaningful.
+    const aOrder = a.sort_order;
+    const bOrder = a.sort_order === b.sort_order ? a.sort_order + 1 : b.sort_order;
+    const { error: e1 } = await supabase
+      .from(table)
+      .update({ sort_order: -1 })
+      .eq("id", a.id);
+    if (!e1) {
+      await supabase.from(table).update({ sort_order: aOrder }).eq("id", b.id);
+      await supabase.from(table).update({ sort_order: bOrder }).eq("id", a.id);
+    }
+    setReorderBusy(false);
+    if (e1) {
+      toast.error(e1.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  }
+
+  async function moveProduct(index: number, dir: -1 | 1) {
+    const list = filtered;
+    const target = list[index + dir];
+    const current = list[index];
+    if (!target || !current) return;
+    await swapSortOrder("products", current, target);
+  }
+
+  async function moveVariant(p: Product, index: number, dir: -1 | 1) {
+    const target = p.variants[index + dir];
+    const current = p.variants[index];
+    if (!target || !current) return;
+    await swapSortOrder("product_variants", current, target);
+  }
+
+
 
 
   async function handleSave(e: React.FormEvent) {
@@ -571,8 +658,9 @@ function AdminDashboard() {
                 No products yet.
               </div>
             ) : (
-              filtered.map((p) => {
+              filtered.map((p, pIdx) => {
                 const totalStock = p.variants.reduce((s, v) => s + v.stock_count, 0);
+                const isAdding = addSizeFor === p.id;
                 return (
                   <div
                     key={p.id}
@@ -601,17 +689,39 @@ function AdminDashboard() {
                               Total stock: <span className="text-foreground">{totalStock}</span>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDelete(p)}
-                            className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              aria-label="Move product up"
+                              title="Move up"
+                              disabled={reorderBusy || pIdx === 0}
+                              onClick={() => moveProduct(pIdx, -1)}
+                              className="h-8 w-8 grid place-items-center rounded-full border border-border text-muted-foreground hover:border-rose hover:text-rose disabled:opacity-30"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Move product down"
+                              title="Move down"
+                              disabled={reorderBusy || pIdx === filtered.length - 1}
+                              onClick={() => moveProduct(pIdx, 1)}
+                              className="h-8 w-8 grid place-items-center rounded-full border border-border text-muted-foreground hover:border-rose hover:text-rose disabled:opacity-30"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p)}
+                              className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
 
                         {p.variants.length > 0 && (
                           <ul className="mt-3 space-y-2">
-                            {p.variants.map((v) => {
+                            {p.variants.map((v, vIdx) => {
                               const busy = stockBusy === v.id;
                               const draft = draftFor(v.id, v.stock_count);
                               const parsed = parseInt(draft || "0", 10);
@@ -622,16 +732,38 @@ function AdminDashboard() {
                                   key={v.id}
                                   className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2"
                                 >
-                                  <div className="text-sm">
-                                    <span className="font-medium text-foreground">
-                                      {v.size}
-                                    </span>{" "}
-                                    <span className="text-rose">
-                                      ${v.price.toFixed(2)}
-                                    </span>
-                                    <span className="ml-2 text-xs text-muted-foreground">
-                                      in stock: {v.stock_count}
-                                    </span>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex flex-col">
+                                      <button
+                                        type="button"
+                                        aria-label={`Move ${v.size} up`}
+                                        disabled={reorderBusy || vIdx === 0}
+                                        onClick={() => moveVariant(p, vIdx, -1)}
+                                        className="h-4 w-5 grid place-items-center text-muted-foreground hover:text-rose disabled:opacity-30"
+                                      >
+                                        <ArrowUp size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label={`Move ${v.size} down`}
+                                        disabled={reorderBusy || vIdx === p.variants.length - 1}
+                                        onClick={() => moveVariant(p, vIdx, 1)}
+                                        className="h-4 w-5 grid place-items-center text-muted-foreground hover:text-rose disabled:opacity-30"
+                                      >
+                                        <ArrowDown size={12} />
+                                      </button>
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="font-medium text-foreground">
+                                        {v.size}
+                                      </span>{" "}
+                                      <span className="text-rose">
+                                        ${v.price.toFixed(2)}
+                                      </span>
+                                      <span className="ml-2 text-xs text-muted-foreground">
+                                        in stock: {v.stock_count}
+                                      </span>
+                                    </div>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <button
@@ -690,11 +822,107 @@ function AdminDashboard() {
                           </ul>
                         )}
 
+                        {/* Add another size */}
+                        <div className="mt-3">
+                          {!isAdding ? (
+                            <button
+                              type="button"
+                              onClick={() => openAddSize(p.id)}
+                              className="text-xs uppercase tracking-[0.18em] text-rose hover:underline"
+                            >
+                              + Add Another Size to This Product
+                            </button>
+                          ) : (
+                            <div className="rounded-md border border-rose/40 bg-background p-3 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                                  New size for {p.title}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={closeAddSize}
+                                  aria-label="Cancel"
+                                  className="text-muted-foreground hover:text-foreground"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+
+                              <div className="flex flex-wrap gap-1.5">
+                                {SIZE_OPTIONS.map((s) => {
+                                  const used = p.variants.some(
+                                    (v) => v.size.toLowerCase() === s.toLowerCase()
+                                  );
+                                  const active = newVariant.size === s;
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={s}
+                                      disabled={used}
+                                      onClick={() => setNewVariant((n) => ({ ...n, size: s }))}
+                                      className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
+                                        used
+                                          ? "border-border text-muted-foreground/40 line-through cursor-not-allowed"
+                                          : active
+                                          ? "border-rose bg-rose text-primary-foreground"
+                                          : "border-border text-muted-foreground hover:border-rose hover:text-rose"
+                                      }`}
+                                    >
+                                      {s}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="grid grid-cols-[1fr_90px_90px_auto] gap-2 items-center">
+                                <input
+                                  value={newVariant.size}
+                                  onChange={(e) =>
+                                    setNewVariant((n) => ({ ...n, size: e.target.value }))
+                                  }
+                                  placeholder="Size (e.g. 7.5ml)"
+                                  className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                                />
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={newVariant.price}
+                                  onChange={(e) =>
+                                    setNewVariant((n) => ({ ...n, price: e.target.value }))
+                                  }
+                                  placeholder="Price"
+                                  className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={newVariant.stock}
+                                  onChange={(e) =>
+                                    setNewVariant((n) => ({ ...n, stock: e.target.value }))
+                                  }
+                                  placeholder="Stock"
+                                  className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
+                                />
+                                <button
+                                  type="button"
+                                  disabled={addingSize}
+                                  onClick={() => confirmAddSize(p)}
+                                  className="rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs uppercase tracking-[0.18em] hover:bg-rose disabled:opacity-60"
+                                >
+                                  {addingSize ? "…" : "Confirm"}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                       </div>
                     </div>
                   </div>
                 );
               })
+
             )}
           </div>
         </div>
