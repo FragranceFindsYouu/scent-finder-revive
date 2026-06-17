@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { productsQueryOptions } from "@/lib/products";
 import { FragranceCard } from "@/components/FragranceCard";
+import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/catalog")({
   head: () => ({
@@ -42,12 +43,13 @@ function Catalog() {
     <div>
       <section className="bg-cream/40 border-b border-border/60">
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-20">
-          <p className="text-xs uppercase tracking-[0.3em] text-rose">The catalog</p>
+          <EditableText id="catalog.eyebrow" as="p" className="text-xs uppercase tracking-[0.3em] text-rose">The catalog</EditableText>
           <h1 className="mt-4 font-display text-5xl md:text-6xl text-primary text-balance">
-            Every scent <span className="italic text-rose">currently in the studio</span>
+            <EditableText id="catalog.heading.pre">Every scent </EditableText>
+            <EditableText id="catalog.heading.post" className="italic text-rose">currently in the studio</EditableText>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-xl">
-            {products.length} fragrances · decants from $5 · handpoured to order
+            {products.length}<EditableText id="catalog.subhead.tail"> fragrances · decants from $5 · handpoured to order</EditableText>
           </p>
         </div>
       </section>

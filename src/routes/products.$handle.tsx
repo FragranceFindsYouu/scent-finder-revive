@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { productsQueryOptions, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
+import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/products/$handle")({
   loader: async ({ context }) => {
@@ -116,10 +117,11 @@ function ProductDetail() {
   return (
     <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
       <div className="mb-6 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-        <Link to="/catalog" className="hover:text-primary">Catalog</Link>
+        <Link to="/catalog" className="hover:text-primary"><EditableText id="pdp.breadcrumb.catalog">Catalog</EditableText></Link>
         <span className="mx-2">/</span>
         <span className="text-primary">{product.title}</span>
       </div>
+
 
       <div className="grid md:grid-cols-2 gap-10 lg:gap-16">
         <div className="aspect-[3/4] overflow-hidden rounded-xl bg-white">
@@ -148,9 +150,9 @@ function ProductDetail() {
               </span>
             )}
             {!inStock && (
-              <span className="text-xs uppercase tracking-[0.2em] text-destructive">
+              <EditableText id="pdp.soldOut" className="text-xs uppercase tracking-[0.2em] text-destructive">
                 Sold out
-              </span>
+              </EditableText>
             )}
           </div>
 
@@ -216,7 +218,7 @@ function ProductDetail() {
               disabled={!inStock}
               className="flex-1 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-xs uppercase tracking-[0.22em] hover:bg-rose disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {inStock ? "Add to cart" : "Sold out"}
+              {inStock ? <EditableText id="pdp.cta.addToCart">Add to cart</EditableText> : <EditableText id="pdp.cta.soldOut">Sold out</EditableText>}
             </button>
           </div>
 
@@ -225,9 +227,9 @@ function ProductDetail() {
           )}
 
           <ul className="mt-10 space-y-2 text-xs text-muted-foreground border-t border-border pt-6">
-            <li>· Handpoured to order in a clean glass atomizer</li>
-            <li>· Sealed and labelled before shipping</li>
-            <li>· Independent decants — not affiliated with any brand</li>
+            <li><EditableText id="pdp.detail.1">· Handpoured to order in a clean glass atomizer</EditableText></li>
+            <li><EditableText id="pdp.detail.2">· Sealed and labelled before shipping</EditableText></li>
+            <li><EditableText id="pdp.detail.3">· Independent decants — not affiliated with any brand</EditableText></li>
           </ul>
         </div>
       </div>

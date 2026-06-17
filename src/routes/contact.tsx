@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -40,13 +41,14 @@ function Contact() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 lg:px-10 py-24">
-      <p className="text-xs uppercase tracking-[0.3em] text-rose">Say hello</p>
+      <EditableText id="contact.eyebrow" as="p" className="text-xs uppercase tracking-[0.3em] text-rose">Say hello</EditableText>
       <h1 className="mt-4 font-display text-5xl md:text-6xl text-primary text-balance">
-        Questions, requests, <span className="italic text-rose">or just hi.</span>
+        <EditableText id="contact.heading.pre">Questions, requests, </EditableText>
+        <EditableText id="contact.heading.post" className="italic text-rose">or just hi.</EditableText>
       </h1>
-      <p className="mt-6 text-muted-foreground max-w-xl">
+      <EditableText id="contact.intro" as="p" className="mt-6 text-muted-foreground max-w-xl" multiline>
         I read every message myself. Looking for a fragrance not in the catalog? Have a question about a decant? Send a note.
-      </p>
+      </EditableText>
 
       <form className="mt-12 space-y-6" onSubmit={handleSubmit}>
         <div className="grid sm:grid-cols-2 gap-6">

@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart";
+import { EditableText } from "@/lib/siteSettings";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, setQuantity, subtotal, count } = useCart();
@@ -15,23 +16,23 @@ export function CartDrawer() {
       <SheetContent side="right" className="flex w-full sm:max-w-md flex-col">
         <SheetHeader>
           <SheetTitle className="font-display text-2xl text-primary">
-            Your cart {count > 0 && <span className="text-rose">({count})</span>}
+            <EditableText id="cart.title">Your cart</EditableText> {count > 0 && <span className="text-rose">({count})</span>}
           </SheetTitle>
         </SheetHeader>
 
         {items.length === 0 ? (
           <div className="flex-1 grid place-items-center text-center px-6">
             <div>
-              <p className="font-display text-xl text-primary">Your cart is empty</p>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <EditableText id="cart.empty.title" as="p" className="font-display text-xl text-primary">Your cart is empty</EditableText>
+              <EditableText id="cart.empty.body" as="p" className="mt-2 text-sm text-muted-foreground" multiline>
                 Browse the catalog and add a decant to get started.
-              </p>
+              </EditableText>
               <Link
                 to="/catalog"
                 onClick={closeCart}
                 className="mt-6 inline-flex rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
               >
-                Browse catalog
+                <EditableText id="cart.empty.cta">Browse catalog</EditableText>
               </Link>
             </div>
           </div>
@@ -64,7 +65,7 @@ export function CartDrawer() {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Size: {item.size} · ${item.price.toFixed(2)} each
+                      <EditableText id="cart.line.sizeLabel">Size:</EditableText> {item.size} · ${item.price.toFixed(2)} <EditableText id="cart.line.eachLabel">each</EditableText>
                     </p>
                     <div className="mt-2 flex items-center justify-between">
                       <div className="inline-flex items-center border border-border rounded-full">
@@ -91,7 +92,7 @@ export function CartDrawer() {
                         onClick={() => removeItem(item.variant_id)}
                         className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground hover:text-destructive"
                       >
-                        Remove
+                        <EditableText id="cart.line.remove">Remove</EditableText>
                       </button>
                     </div>
                   </div>
@@ -101,22 +102,22 @@ export function CartDrawer() {
 
             <div className="border-t border-border pt-4 space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <EditableText id="cart.subtotal.label" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Subtotal
-                </span>
+                </EditableText>
                 <span className="font-display text-2xl text-primary">
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <EditableText id="cart.shippingNote" as="p" className="text-[11px] text-muted-foreground">
                 Shipping and taxes calculated at checkout.
-              </p>
+              </EditableText>
               <Link
                 to="/checkout"
                 onClick={closeCart}
                 className="block text-center rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
               >
-                Checkout
+                <EditableText id="cart.checkoutCta">Checkout</EditableText>
               </Link>
             </div>
           </>
