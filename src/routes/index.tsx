@@ -106,9 +106,7 @@ function Home() {
             See all {products.length} scents →
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-          {featured.map((f) => <FragranceCard key={f.id} f={f} />)}
-        </div>
+        <EditableProductGrid products={featured} />
       </section>
 
       {/* About teaser */}
