@@ -282,12 +282,32 @@ function AdminDashboard() {
             {products.length} products · changes appear instantly on your store.
           </p>
         </div>
-        <button
-          onClick={signOut}
-          className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
-        >
-          Sign out
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            className={`cursor-pointer rounded-full border border-rose px-6 py-3 text-xs uppercase tracking-[0.2em] text-rose hover:bg-rose hover:text-primary-foreground ${
+              importing ? "opacity-60 pointer-events-none" : ""
+            }`}
+          >
+            {importing
+              ? importProgress && importProgress.total > 0
+                ? `Importing ${importProgress.done}/${importProgress.total}…`
+                : "Importing…"
+              : "Bulk Import Shopify CSV"}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleShopifyImport}
+              disabled={importing}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={signOut}
+            className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div className="mt-10 grid lg:grid-cols-[460px_1fr] gap-10">
