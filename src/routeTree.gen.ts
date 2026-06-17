@@ -20,6 +20,7 @@ import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
+import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const ContactRoute = ContactRouteImport.update({
@@ -77,6 +78,12 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin-dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminOrdersRoute =
+  AuthenticatedAdminOrdersRouteImport.update({
+    id: '/admin/orders',
+    path: '/admin/orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -108,6 +116,7 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -123,6 +132,7 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/products/$handle'
     | '/review/$token'
+    | '/admin/orders'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/products/$handle'
     | '/review/$token'
+    | '/admin/orders'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -165,6 +177,7 @@ export interface FileRouteTypes {
     | '/checkout/return'
     | '/products/$handle'
     | '/review/$token'
+    | '/_authenticated/admin/orders'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/orders': {
+      id: '/_authenticated/admin/orders'
+      path: '/admin/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -272,10 +292,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -58,7 +58,7 @@ function statusPill(status: string) {
 }
 
 function AdminOrdersPage() {
-  const { isAdmin, loading: roleLoading } = useIsAdmin();
+  const { isAdmin, ready } = useIsAdmin();
   const listFn = useServerFn(listOrdersAdmin);
   const refundFn = useServerFn(refundOrderAdmin);
   const queryClient = useQueryClient();
