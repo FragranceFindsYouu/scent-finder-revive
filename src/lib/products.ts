@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const SIZE_OPTIONS = ["1ml", "3ml", "5ml", "30ml", "50ml", "100ml"] as const;
+export const SIZE_OPTIONS = ["1ml", "3ml", "5ml", "10ml", "30ml", "50ml"] as const;
 export type SizeOption = (typeof SIZE_OPTIONS)[number];
 
 export type ProductVariant = {
