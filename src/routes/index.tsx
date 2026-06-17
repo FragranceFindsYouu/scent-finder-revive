@@ -10,6 +10,8 @@ import aboutImg from "@/assets/about-decants.jpg";
 
 import { productsQueryOptions } from "@/lib/products";
 import { FragranceCard } from "@/components/FragranceCard";
+import { EditableProductGrid } from "@/components/EditableProductGrid";
+import { useEditMode } from "@/lib/editMode";
 
 export const Route = createFileRoute("/")({
   head: () => ({

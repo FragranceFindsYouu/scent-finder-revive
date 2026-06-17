@@ -17,6 +17,7 @@ import { AmbientAudio } from "../components/AmbientAudio";
 import { Toaster } from "../components/ui/sonner";
 import { CartProvider } from "../lib/cart";
 import { CartDrawer } from "../components/CartDrawer";
+import { EditModeProvider, EditModeFloatingToggle } from "../lib/editMode";
 
 function NotFoundComponent() {
   return (
@@ -109,16 +110,19 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-        <CartDrawer />
-        <AmbientAudio />
-        <Toaster />
+        <EditModeProvider>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <Footer />
+          </div>
+          <CartDrawer />
+          <AmbientAudio />
+          <Toaster />
+          <EditModeFloatingToggle />
+        </EditModeProvider>
       </CartProvider>
     </QueryClientProvider>
   );
