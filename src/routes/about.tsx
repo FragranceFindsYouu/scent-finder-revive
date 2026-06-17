@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import parisVideo from "@/assets/paris.mp4.asset.json";
+import parisGif from "@/assets/paris.gif.asset.json";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -28,7 +28,7 @@ function About() {
 
       <section className="mx-auto max-w-6xl px-6 lg:px-10 grid md:grid-cols-2 gap-14 items-center pb-24">
         <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-soft">
-          <video src={parisVideo.url} autoPlay loop muted playsInline className="h-full w-full object-cover" />
+          <img src={parisGif.url} alt="A pink rose in front of the Eiffel Tower at sunset" className="h-full w-full object-cover" />
         </div>
         <div className="space-y-6 font-serif text-lg leading-relaxed text-foreground/85">
           <p className="font-display text-3xl text-primary italic">"One day, my own bottle."</p>
