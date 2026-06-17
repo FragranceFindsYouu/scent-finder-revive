@@ -91,7 +91,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "cashapp", "affirm", "klarna"],
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
