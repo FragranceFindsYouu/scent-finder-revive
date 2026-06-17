@@ -101,11 +101,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
               ...(item.image && /^https?:\/\//.test(item.image) && {
                 images: [item.image],
               }),
-              tax_code: "txcd_99999999", // general tangible goods
             },
           },
         })),
-        automatic_tax: { enabled: true },
         billing_address_collection: "auto",
         shipping_address_collection: {
           allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "DK", "IE"],
