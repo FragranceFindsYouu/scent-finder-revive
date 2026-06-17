@@ -69,6 +69,11 @@ function AdminDashboard() {
   const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
   const [stockBusy, setStockBusy] = useState<string | null>(null);
   const [stockDrafts, setStockDrafts] = useState<Record<string, string>>({});
+  const [addSizeFor, setAddSizeFor] = useState<string | null>(null);
+  const [newVariant, setNewVariant] = useState({ size: "", price: "", stock: "10" });
+  const [addingSize, setAddingSize] = useState(false);
+  const [reorderBusy, setReorderBusy] = useState(false);
+
 
 
   async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
