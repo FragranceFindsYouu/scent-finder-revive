@@ -18,6 +18,8 @@ import { Toaster } from "../components/ui/sonner";
 import { CartProvider } from "../lib/cart";
 import { CartDrawer } from "../components/CartDrawer";
 import { EditModeProvider, EditModeFloatingToggle } from "../lib/editMode";
+import { SiteSettingsProvider } from "../lib/siteSettings";
+import { LayoutCustomizer, ApplyBgTheme } from "../components/LayoutCustomizer";
 
 function NotFoundComponent() {
   return (
@@ -110,19 +112,23 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
-        <EditModeProvider>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-              <Outlet />
-            </main>
-            <Footer />
-          </div>
-          <CartDrawer />
-          <AmbientAudio />
-          <Toaster />
-          <EditModeFloatingToggle />
-        </EditModeProvider>
+        <SiteSettingsProvider>
+          <EditModeProvider>
+            <ApplyBgTheme />
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1">
+                <Outlet />
+              </main>
+              <Footer />
+            </div>
+            <CartDrawer />
+            <AmbientAudio />
+            <Toaster />
+            <EditModeFloatingToggle />
+            <LayoutCustomizer />
+          </EditModeProvider>
+        </SiteSettingsProvider>
       </CartProvider>
     </QueryClientProvider>
   );
