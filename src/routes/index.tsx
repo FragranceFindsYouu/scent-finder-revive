@@ -7,7 +7,7 @@ import heroGif from "@/assets/hero-water-bamboo.gif";
 import eiffelVideo from "@/assets/eiffel-tower-night.mp4.asset.json";
 import aboutImg from "@/assets/about-decants.jpg";
 
-import { SHOP_URL } from "@/data/fragrances";
+
 import { productsQueryOptions } from "@/lib/products";
 import { FragranceCard } from "@/components/FragranceCard";
 
@@ -140,9 +140,9 @@ function Home() {
               <Link to="/about" className="rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.22em] hover:bg-rose">
                 Read more
               </Link>
-              <a href={`${SHOP_URL}/collections/all`} target="_blank" rel="noreferrer" className="rounded-full border border-primary/30 px-6 py-3 text-xs uppercase tracking-[0.22em] text-primary hover:bg-cream">
+              <Link to="/catalog" className="rounded-full border border-primary/30 px-6 py-3 text-xs uppercase tracking-[0.22em] text-primary hover:bg-cream">
                 Support the journey
-              </a>
+              </Link>
             </div>
           </div>
         </div>
