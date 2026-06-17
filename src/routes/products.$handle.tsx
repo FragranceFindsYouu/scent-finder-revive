@@ -234,6 +234,8 @@ function ProductDetail() {
           </ul>
         </div>
       </div>
+
+      <ProductReviews handle={product.handle} />
     </div>
   );
 }
