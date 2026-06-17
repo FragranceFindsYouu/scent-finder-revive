@@ -86,7 +86,7 @@ function Home() {
               The right Fragrance finds you in Our Bottles
             </EditableText>
             <EditableText id="home.hero.subtext" as="p" className="mt-6 max-w-xl text-base md:text-lg text-white/90 drop-shadow" multiline>
-              Try designer and niche fragrances in decants — handpoured by Joan, That's truly you before committing to a full bottle. Fragrance Finds You is not associated with the brands you see <3
+              {"Try designer and niche fragrances in decants — handpoured by Joan, That's truly you before committing to a full bottle. Fragrance Finds You is not associated with the brands you see <3"}
             </EditableText>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
