@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -19,15 +20,15 @@ function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <h1 className="font-display text-4xl text-primary">Your cart is empty</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <EditableText id="checkout.empty.title" as="h1" className="font-display text-4xl text-primary">Your cart is empty</EditableText>
+        <EditableText id="checkout.empty.body" as="p" className="mt-3 text-sm text-muted-foreground">
           Add a decant from the catalog to check out.
-        </p>
+        </EditableText>
         <Link
           to="/catalog"
           className="mt-8 inline-flex rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
         >
-          Browse catalog
+          <EditableText id="checkout.empty.cta">Browse catalog</EditableText>
         </Link>
       </div>
     );
@@ -42,10 +43,10 @@ function CheckoutPage() {
     <>
       <PaymentTestModeBanner />
       <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
-        <h1 className="font-display text-4xl md:text-5xl text-primary">Checkout</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <EditableText id="checkout.title" as="h1" className="font-display text-4xl md:text-5xl text-primary">Checkout</EditableText>
+        <EditableText id="checkout.subtitle" as="p" className="mt-2 text-sm text-muted-foreground">
           Secure payment by card, Apple Pay, Google Pay, or Link.
-        </p>
+        </EditableText>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
           <div className="rounded-xl border border-border bg-card p-2 md:p-4">
@@ -53,7 +54,7 @@ function CheckoutPage() {
           </div>
 
           <aside className="rounded-xl border border-border p-6 h-fit bg-card space-y-4 sticky top-20">
-            <h2 className="font-display text-2xl text-primary">Order summary</h2>
+            <EditableText id="checkout.summary.title" as="h2" className="font-display text-2xl text-primary">Order summary</EditableText>
             <ul className="divide-y divide-border -mx-2">
               {items.map((i) => (
                 <li key={i.variant_id} className="py-3 px-2 flex gap-3">
@@ -76,12 +77,12 @@ function CheckoutPage() {
             </ul>
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
+                <EditableText id="checkout.summary.subtotal">Subtotal</EditableText>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Tax &amp; shipping</span>
-                <span>Calculated at checkout</span>
+                <EditableText id="checkout.summary.taxLabel">Tax &amp; shipping</EditableText>
+                <EditableText id="checkout.summary.taxValue">Calculated at checkout</EditableText>
               </div>
             </div>
           </aside>

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -40,51 +41,60 @@ function Contact() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 lg:px-10 py-24">
-      <p className="text-xs uppercase tracking-[0.3em] text-rose">Say hello</p>
+      <EditableText id="contact.eyebrow" as="p" className="text-xs uppercase tracking-[0.3em] text-rose">Say hello</EditableText>
       <h1 className="mt-4 font-display text-5xl md:text-6xl text-primary text-balance">
-        Questions, requests, <span className="italic text-rose">or just hi.</span>
+        <EditableText id="contact.heading.pre">Questions, requests, </EditableText>
+        <EditableText id="contact.heading.post" className="italic text-rose">or just hi.</EditableText>
       </h1>
-      <p className="mt-6 text-muted-foreground max-w-xl">
+      <EditableText id="contact.intro" as="p" className="mt-6 text-muted-foreground max-w-xl" multiline>
         I read every message myself. Looking for a fragrance not in the catalog? Have a question about a decant? Send a note.
-      </p>
+      </EditableText>
 
       <form className="mt-12 space-y-6" onSubmit={handleSubmit}>
         <div className="grid sm:grid-cols-2 gap-6">
           <label className="block">
-            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Name</span>
+            <EditableText id="contact.form.name.label" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Name</EditableText>
             <input name="name" required className="mt-2 w-full bg-transparent border-b border-border focus:border-rose outline-none py-2" />
           </label>
           <label className="block">
-            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</span>
+            <EditableText id="contact.form.email.label" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</EditableText>
             <input name="email" required type="email" className="mt-2 w-full bg-transparent border-b border-border focus:border-rose outline-none py-2" />
           </label>
         </div>
         <label className="block">
-          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Message</span>
+          <EditableText id="contact.form.message.label" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Message</EditableText>
           <textarea name="message" required rows={5} className="mt-2 w-full bg-transparent border-b border-border focus:border-rose outline-none py-2 resize-none" />
         </label>
         <button disabled={submitting} className="rounded-full bg-primary text-primary-foreground px-7 py-3 text-xs uppercase tracking-[0.22em] hover:bg-rose disabled:opacity-60">
-          {submitting ? "Sending…" : "Send message"}
+          {submitting ? "Sending…" : <EditableText id="contact.form.submit">Send message</EditableText>}
         </button>
       </form>
 
       <div className="mt-16 pt-10 border-t border-border space-y-10 text-sm">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</p>
-          <a href="mailto:Fragrancefindsyouu@gmail.com" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose break-all">Fragrancefindsyouu@gmail.com</a>
+          <EditableText id="contact.email.label" as="p" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</EditableText>
+          <a href="mailto:Fragrancefindsyouu@gmail.com" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose break-all">
+            <EditableText id="contact.email.value">Fragrancefindsyouu@gmail.com</EditableText>
+          </a>
         </div>
         <div className="grid sm:grid-cols-3 gap-8">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Instagram</p>
-            <a href="https://www.instagram.com/fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+            <EditableText id="contact.ig.label" as="p" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Instagram</EditableText>
+            <a href="https://www.instagram.com/fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">
+              <EditableText id="contact.ig.value">@fragrancefindsyou</EditableText>
+            </a>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">TikTok</p>
-            <a href="http://www.tiktok.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+            <EditableText id="contact.tt.label" as="p" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">TikTok</EditableText>
+            <a href="http://www.tiktok.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">
+              <EditableText id="contact.tt.value">@fragrancefindsyou</EditableText>
+            </a>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">YouTube</p>
-            <a href="https://youtube.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+            <EditableText id="contact.yt.label" as="p" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">YouTube</EditableText>
+            <a href="https://youtube.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">
+              <EditableText id="contact.yt.value">@fragrancefindsyou</EditableText>
+            </a>
           </div>
         </div>
       </div>
