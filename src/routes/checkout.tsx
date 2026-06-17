@@ -45,8 +45,27 @@ function CheckoutPage() {
       <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
         <EditableText id="checkout.title" as="h1" className="font-display text-4xl md:text-5xl text-primary">Checkout</EditableText>
         <EditableText id="checkout.subtitle" as="p" className="mt-2 text-sm text-muted-foreground">
-          Secure payment by card, Apple Pay, Google Pay, or Link.
+          Secure payment by card, Apple Pay, Google Pay, PayPal, or Link.
         </EditableText>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {[
+            { label: "Visa", bg: "bg-[#1A1F71]", fg: "text-white" },
+            { label: "Mastercard", bg: "bg-white border border-border", fg: "text-[#EB001B]" },
+            { label: "Amex", bg: "bg-[#2E77BC]", fg: "text-white" },
+            { label: "Apple Pay", bg: "bg-black", fg: "text-white" },
+            { label: "Google Pay", bg: "bg-white border border-border", fg: "text-foreground" },
+            { label: "PayPal", bg: "bg-[#FFC439]", fg: "text-[#003087]" },
+            { label: "Link", bg: "bg-[#00D66F]", fg: "text-black" },
+          ].map((m) => (
+            <span
+              key={m.label}
+              className={`inline-flex items-center rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide ${m.bg} ${m.fg}`}
+            >
+              {m.label}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
           <div className="rounded-xl border border-border bg-card p-2 md:p-4">
