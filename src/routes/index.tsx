@@ -63,7 +63,7 @@ function Home() {
         <div className="relative mx-auto max-w-7xl px-6 lg:px-10 py-32 md:py-44">
           <p className="text-xs uppercase tracking-[0.3em] text-gold">An independent decanting house</p>
           <h1 className="mt-6 font-display text-5xl md:text-7xl lg:text-8xl leading-[1.02] text-white text-balance max-w-4xl drop-shadow-lg whitespace-pre-line">
-            The right <span className="text-rose">Fragrance finds</span> you in Our\u00A0\nBottles\u00A0\n
+            The right <span className="text-rose">Fragrance finds</span> you in Our{"\u00A0"}Bottles
           </h1>
           <p className="mt-6 max-w-xl text-base md:text-lg text-white/90 drop-shadow">
             Try designer and niche fragrances in decants — handpoured by Joan, That's truly you before committing to a full bottle. Fragrance Finds You is not associated{"\u00A0"} with the brands you see &lt;3
