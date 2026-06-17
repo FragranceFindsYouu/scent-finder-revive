@@ -11,7 +11,7 @@ export type AdminOrder = {
   stripe_session_id: string;
   customer_email: string | null;
   customer_name: string | null;
-  shipping_address: Record<string, unknown> | null;
+  shipping_address: Record<string, string | number | boolean | null> | null;
   items: Array<{ variantId?: string; handle: string; title: string; size: string; quantity: number }>;
   total_amount_cents: number | null;
   payment_intent_id: string | null;
