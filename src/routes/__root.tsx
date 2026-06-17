@@ -20,6 +20,7 @@ import { CartDrawer } from "../components/CartDrawer";
 import { EditModeProvider, EditModeFloatingToggle } from "../lib/editMode";
 import { SiteSettingsProvider } from "../lib/siteSettings";
 import { LayoutCustomizer, ApplyBgTheme } from "../components/LayoutCustomizer";
+import { SprayIntro } from "../components/SprayIntro";
 
 function NotFoundComponent() {
   return (
