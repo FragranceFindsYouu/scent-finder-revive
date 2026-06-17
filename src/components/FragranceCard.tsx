@@ -3,6 +3,8 @@ import type { Product } from "@/lib/products";
 
 export function FragranceCard({ f }: { f: Product }) {
   const href = `${SHOP_URL}/products/${f.handle}`;
+  const img = f.image_url || f.image;
+  const inStock = f.inventory_count > 0;
   return (
     <a
       href={href}
@@ -11,9 +13,9 @@ export function FragranceCard({ f }: { f: Product }) {
       className="group relative flex flex-col"
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-white">
-        {f.image ? (
+        {img ? (
           <img
-            src={f.image}
+            src={img}
             alt={f.title}
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -23,7 +25,7 @@ export function FragranceCard({ f }: { f: Product }) {
             {f.title.split(" ")[0]}
           </div>
         )}
-        {!f.available && (
+        {!inStock && (
           <span className="absolute top-3 left-3 bg-background/90 text-foreground text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-full">
             Sold out
           </span>
@@ -34,8 +36,11 @@ export function FragranceCard({ f }: { f: Product }) {
         <h3 className="font-display text-lg leading-tight text-foreground">{f.title}</h3>
         <span className="font-sans text-sm text-rose whitespace-nowrap">${f.price.toFixed(2)}</span>
       </div>
+      {f.description && (
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{f.description}</p>
+      )}
       <span className="mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-        Decant
+        {f.category || "Decant"}
       </span>
     </a>
   );
