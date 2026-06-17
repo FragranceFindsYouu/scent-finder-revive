@@ -6,7 +6,6 @@ import {
   productsQueryOptions,
   SIZE_OPTIONS,
   type Product,
-  type SizeOption,
 } from "@/lib/products";
 import { toast } from "sonner";
 import { importShopifyCSV } from "@/lib/shopifyImport";
@@ -31,7 +30,7 @@ function slugify(s: string) {
 
 type VariantDraft = {
   key: string;
-  size: SizeOption;
+  size: string;
   price: string;
   stock_count: string;
 };
@@ -43,7 +42,7 @@ const emptyForm = {
   category: "",
 };
 
-function makeVariant(size: SizeOption): VariantDraft {
+function makeVariant(size: string): VariantDraft {
   return {
     key: crypto.randomUUID(),
     size,
@@ -60,11 +59,13 @@ function AdminDashboard() {
 
   const [form, setForm] = useState(emptyForm);
   const [variants, setVariants] = useState<VariantDraft[]>([makeVariant("5ml")]);
+  const [customSize, setCustomSize] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
+  const [stockBusy, setStockBusy] = useState<string | null>(null);
 
   async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -154,14 +155,57 @@ function AdminDashboard() {
     setVariants((vs) => vs.map((v) => (v.key === key ? { ...v, ...patch } : v)));
   }
 
-  function addVariant() {
-    const used = new Set(variants.map((v) => v.size));
-    const nextSize = SIZE_OPTIONS.find((s) => !used.has(s)) ?? SIZE_OPTIONS[0];
-    setVariants((vs) => [...vs, makeVariant(nextSize)]);
+  function addSize(size: string) {
+    const clean = size.trim();
+    if (!clean) return;
+    if (variants.some((v) => v.size.toLowerCase() === clean.toLowerCase())) {
+      toast.error(`${clean} is already added.`);
+      return;
+    }
+    setVariants((vs) => [...vs, makeVariant(clean)]);
+  }
+
+  function addCustomSize() {
+    const clean = customSize.trim();
+    if (!clean) return;
+    addSize(clean);
+    setCustomSize("");
   }
 
   function removeVariant(key: string) {
     setVariants((vs) => (vs.length === 1 ? vs : vs.filter((v) => v.key !== key)));
+  }
+
+  async function adjustStock(variantId: string, currentStock: number, delta: number) {
+    const next = Math.max(0, currentStock + delta);
+    if (next === currentStock) return;
+    setStockBusy(variantId);
+    const { error } = await supabase
+      .from("product_variants")
+      .update({ stock_count: next })
+      .eq("id", variantId);
+    setStockBusy(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  }
+
+  async function setStockExact(variantId: string, value: string) {
+    const n = parseInt(value || "0", 10);
+    if (Number.isNaN(n) || n < 0) return;
+    setStockBusy(variantId);
+    const { error } = await supabase
+      .from("product_variants")
+      .update({ stock_count: n })
+      .eq("id", variantId);
+    setStockBusy(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -172,8 +216,9 @@ function AdminDashboard() {
     const parsed: { size: string; price: number; stock_count: number }[] = [];
     const seen = new Set<string>();
     for (const v of variants) {
-      if (seen.has(v.size)) return toast.error(`Duplicate size: ${v.size}.`);
-      seen.add(v.size);
+      const sizeKey = v.size.toLowerCase();
+      if (seen.has(sizeKey)) return toast.error(`Duplicate size: ${v.size}.`);
+      seen.add(sizeKey);
       const price = parseFloat(v.price);
       const stock = parseInt(v.stock_count || "0", 10);
       if (Number.isNaN(price) || price < 0)
@@ -271,6 +316,8 @@ function AdminDashboard() {
       </div>
     );
   }
+
+  const usedSizes = new Set(variants.map((v) => v.size.toLowerCase()));
 
   return (
     <div className="mx-auto max-w-7xl px-6 lg:px-10 py-16">
@@ -376,39 +423,70 @@ function AdminDashboard() {
 
           {/* Variants */}
           <div className="pt-2 border-t border-border space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Sizes & pricing *
-              </span>
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Sizes & pricing *
+            </span>
+
+            {/* Quick-add standard sizes */}
+            <div className="flex flex-wrap gap-2">
+              {SIZE_OPTIONS.map((s) => {
+                const used = usedSizes.has(s.toLowerCase());
+                return (
+                  <button
+                    type="button"
+                    key={s}
+                    onClick={() => addSize(s)}
+                    disabled={used}
+                    className={`rounded-full border px-3 py-1.5 text-xs tracking-wide transition ${
+                      used
+                        ? "border-border text-muted-foreground/50 line-through cursor-not-allowed"
+                        : "border-rose text-rose hover:bg-rose hover:text-primary-foreground"
+                    }`}
+                  >
+                    + {s}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom size */}
+            <div className="flex items-end gap-2">
+              <label className="flex-1 block">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Custom Size
+                </span>
+                <input
+                  value={customSize}
+                  onChange={(e) => setCustomSize(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomSize();
+                    }
+                  }}
+                  placeholder="e.g. 2ml, 7.5ml, 100ml"
+                  className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-rose"
+                />
+              </label>
               <button
                 type="button"
-                onClick={addVariant}
-                disabled={variants.length >= SIZE_OPTIONS.length}
-                className="rounded-full border border-border px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-primary disabled:opacity-50"
+                onClick={addCustomSize}
+                className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-[0.18em] text-muted-foreground hover:border-rose hover:text-rose"
               >
-                + Add Size
+                Add
               </button>
             </div>
 
-            <div className="space-y-2">
+            {/* Variant rows */}
+            <div className="space-y-2 pt-1">
               {variants.map((v) => (
                 <div
                   key={v.key}
-                  className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center"
+                  className="grid grid-cols-[80px_1fr_1fr_auto] gap-2 items-center"
                 >
-                  <select
-                    value={v.size}
-                    onChange={(e) =>
-                      updateVariant(v.key, { size: e.target.value as SizeOption })
-                    }
-                    className="rounded-md border border-border bg-background px-2 py-2 text-sm outline-none focus:border-rose"
-                  >
-                    {SIZE_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="rounded-md bg-muted px-2 py-2 text-sm text-foreground text-center font-medium">
+                    {v.size}
+                  </div>
                   <input
                     type="number"
                     step="0.01"
@@ -451,10 +529,10 @@ function AdminDashboard() {
           </button>
         </form>
 
-        {/* Active Products Table */}
+        {/* Active Products + Inventory */}
         <div>
           <div className="flex items-center justify-between gap-4 mb-4">
-            <h2 className="font-display text-2xl text-primary">Active products</h2>
+            <h2 className="font-display text-2xl text-primary">Active products & inventory</h2>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -463,74 +541,119 @@ function AdminDashboard() {
             />
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Product</th>
-                  <th className="px-4 py-3 font-medium">Sizes</th>
-                  <th className="px-4 py-3 font-medium">Stock</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">No products yet.</td></tr>
-                ) : (
-                  filtered.map((p) => {
-                    const totalStock = p.variants.length
-                      ? p.variants.reduce((s, v) => s + v.stock_count, 0)
-                      : p.inventory_count;
-                    return (
-                      <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-muted/20 align-top">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-12 w-10 shrink-0 overflow-hidden rounded bg-white">
-                              {(p.image_url || p.image) && (
-                                <img src={p.image_url || p.image} alt={p.title} className="h-full w-full object-cover" />
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-medium text-foreground">{p.title}</div>
-                              {p.category && (
-                                <div className="text-xs text-muted-foreground">{p.category}</div>
-                              )}
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="rounded-xl border border-border px-4 py-10 text-center text-muted-foreground">
+                Loading…
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="rounded-xl border border-border px-4 py-10 text-center text-muted-foreground">
+                No products yet.
+              </div>
+            ) : (
+              filtered.map((p) => {
+                const totalStock = p.variants.reduce((s, v) => s + v.stock_count, 0);
+                return (
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-border bg-card p-4"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="h-16 w-14 shrink-0 overflow-hidden rounded bg-white">
+                        {(p.image_url || p.image) && (
+                          <img
+                            src={p.image_url || p.image}
+                            alt={p.title}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-medium text-foreground">{p.title}</div>
+                            {p.category && (
+                              <div className="text-xs text-muted-foreground">
+                                {p.category}
+                              </div>
+                            )}
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Total stock: <span className="text-foreground">{totalStock}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {p.variants.length === 0 ? (
-                            <span className="text-rose">${p.price.toFixed(2)}</span>
-                          ) : (
-                            <div className="space-y-0.5">
-                              {p.variants.map((v) => (
-                                <div key={v.id}>
-                                  <span className="text-foreground">{v.size}</span>{" "}
-                                  <span className="text-rose">${v.price.toFixed(2)}</span>
+                          <button
+                            onClick={() => handleDelete(p)}
+                            className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
+                          >
+                            Delete
+                          </button>
+                        </div>
+
+                        {p.variants.length > 0 && (
+                          <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                            {p.variants.map((v) => {
+                              const busy = stockBusy === v.id;
+                              return (
+                                <div
+                                  key={v.id}
+                                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2"
+                                >
+                                  <div className="text-sm">
+                                    <span className="font-medium text-foreground">
+                                      {v.size}
+                                    </span>{" "}
+                                    <span className="text-rose">
+                                      ${v.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      aria-label={`Decrease ${v.size} stock`}
+                                      disabled={busy || v.stock_count <= 0}
+                                      onClick={() => adjustStock(v.id, v.stock_count, -1)}
+                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                    >
+                                      −
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      defaultValue={v.stock_count}
+                                      key={`${v.id}-${v.stock_count}`}
+                                      onBlur={(e) => {
+                                        if (parseInt(e.target.value, 10) !== v.stock_count) {
+                                          setStockExact(v.id, e.target.value);
+                                        }
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          (e.target as HTMLInputElement).blur();
+                                        }
+                                      }}
+                                      className="w-14 rounded-md border border-border bg-background px-2 py-1 text-center text-sm outline-none focus:border-rose"
+                                    />
+                                    <button
+                                      type="button"
+                                      aria-label={`Increase ${v.size} stock`}
+                                      disabled={busy}
+                                      onClick={() => adjustStock(v.id, v.stock_count, 1)}
+                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{totalStock}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex justify-end">
-                            <button
-                              onClick={() => handleDelete(p)}
-                              className="rounded-full border border-destructive/40 px-4 py-1.5 text-xs uppercase tracking-[0.15em] text-destructive hover:bg-destructive/10"
-                            >
-                              Delete
-                            </button>
+                              );
+                            })}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
