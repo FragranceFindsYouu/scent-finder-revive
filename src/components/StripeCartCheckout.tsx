@@ -24,6 +24,7 @@ export function StripeCartCheckout({
         items: items.map((i) => ({
           title: i.title,
           size: i.size,
+          handle: i.handle,
           image: i.image,
           unitAmount: Math.round(i.price * 100),
           quantity: i.quantity,
