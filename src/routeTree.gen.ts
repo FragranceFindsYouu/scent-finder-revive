@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
@@ -55,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewTokenRoute = ReviewTokenRouteImport.update({
+  id: '/review/$token',
+  path: '/review/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsHandleRoute = ProductsHandleRouteImport.update({
   id: '/products/$handle',
   path: '/products/$handle',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/review/$token': typeof ReviewTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/review/$token': typeof ReviewTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/products/$handle': typeof ProductsHandleRoute
+  '/review/$token': typeof ReviewTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/checkout/return'
     | '/products/$handle'
+    | '/review/$token'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/checkout/return'
     | '/products/$handle'
+    | '/review/$token'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard'
     | '/checkout/return'
     | '/products/$handle'
+    | '/review/$token'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
+  ReviewTokenRoute: typeof ReviewTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -217,6 +230,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review/$token': {
+      id: '/review/$token'
+      path: '/review/$token'
+      fullPath: '/review/$token'
+      preLoaderRoute: typeof ReviewTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/$handle': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
   ProductsHandleRoute: ProductsHandleRoute,
+  ReviewTokenRoute: ReviewTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
