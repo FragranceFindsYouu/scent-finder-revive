@@ -40,7 +40,43 @@ function AdminDashboard() {
 
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB.");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("product-images")
+      .upload(path, file, { cacheControl: "31536000", upsert: false });
+    if (upErr) {
+      setUploading(false);
+      toast.error(upErr.message);
+      return;
+    }
+    // Bucket is private; create a long-lived signed URL (10 years).
+    const { data: signed, error: sErr } = await supabase.storage
+      .from("product-images")
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    setUploading(false);
+    if (sErr || !signed?.signedUrl) {
+      toast.error(sErr?.message || "Could not create image URL.");
+      return;
+    }
+    setForm((f) => ({ ...f, image_url: signed.signedUrl }));
+    toast.success("Image uploaded.");
+  }
 
   useEffect(() => {
     (async () => {
