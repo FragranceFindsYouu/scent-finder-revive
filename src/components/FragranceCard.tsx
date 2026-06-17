@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
-import { SHOP_URL } from "@/data/fragrances";
+import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Product } from "@/lib/products";
 
 export function FragranceCard({ f }: { f: Product }) {
-  const href = `${SHOP_URL}/products/${f.handle}`;
   const img = f.image_url || f.image;
 
   const variants = f.variants ?? [];
@@ -25,10 +24,9 @@ export function FragranceCard({ f }: { f: Product }) {
 
   return (
     <div className="group relative flex flex-col">
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
+      <Link
+        to="/products/$handle"
+        params={{ handle: f.handle }}
         className="block"
       >
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-white">
@@ -63,7 +61,7 @@ export function FragranceCard({ f }: { f: Product }) {
         <span className="mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           {f.category || "Decant"}
         </span>
-      </a>
+      </Link>
 
       {hasVariants && (
         <select

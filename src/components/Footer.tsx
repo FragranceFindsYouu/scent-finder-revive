@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export function Footer() {
   return (
     <footer className="mt-32 border-t border-border/60 bg-cream/40">
@@ -11,10 +13,9 @@ export function Footer() {
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">Explore</p>
           <ul className="space-y-2 text-sm">
-            <li><a href="https://fragrancefindsyou.com/collections/all" target="_blank" rel="noreferrer" className="hover:text-rose">Shop all decants</a></li>
-            <li><a href="https://fragrancefindsyou.com/policies/shipping-policy" target="_blank" rel="noreferrer" className="hover:text-rose">Shipping</a></li>
-            <li><a href="https://fragrancefindsyou.com/policies/refund-policy" target="_blank" rel="noreferrer" className="hover:text-rose">Returns</a></li>
-            <li><a href="https://fragrancefindsyou.com/policies/privacy-policy" target="_blank" rel="noreferrer" className="hover:text-rose">Privacy</a></li>
+            <li><Link to="/catalog" className="hover:text-rose">Shop all decants</Link></li>
+            <li><Link to="/about" className="hover:text-rose">About</Link></li>
+            <li><Link to="/contact" className="hover:text-rose">Contact</Link></li>
           </ul>
         </div>
         <div>
