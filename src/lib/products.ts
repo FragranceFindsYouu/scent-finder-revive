@@ -28,18 +28,13 @@ export type Product = {
   variants: ProductVariant[];
 };
 
-const SIZE_RANK: Record<string, number> = Object.fromEntries(
-  SIZE_OPTIONS.map((s, i) => [s, i])
-);
-
 function sortVariants(variants: ProductVariant[]): ProductVariant[] {
   return [...variants].sort((a, b) => {
-    const ra = SIZE_RANK[a.size] ?? 999;
-    const rb = SIZE_RANK[b.size] ?? 999;
-    if (ra !== rb) return ra - rb;
+    if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
     return a.price - b.price;
   });
 }
+
 
 export const productsQueryOptions = queryOptions({
   queryKey: ["products"],
