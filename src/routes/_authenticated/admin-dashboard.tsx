@@ -180,25 +180,35 @@ function AdminDashboard() {
     setVariants((vs) => (vs.length === 1 ? vs : vs.filter((v) => v.key !== key)));
   }
 
-  async function adjustStock(variantId: string, currentStock: number, delta: number) {
-    const next = Math.max(0, currentStock + delta);
-    if (next === currentStock) return;
-    setStockBusy(variantId);
-    const { error } = await supabase
-      .from("product_variants")
-      .update({ stock_count: next })
-      .eq("id", variantId);
-    setStockBusy(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ["products"] });
+  function draftFor(variantId: string, current: number): string {
+    return stockDrafts[variantId] ?? String(current);
   }
 
-  async function setStockExact(variantId: string, value: string) {
-    const n = parseInt(value || "0", 10);
-    if (Number.isNaN(n) || n < 0) return;
+  function setDraft(variantId: string, value: string) {
+    setStockDrafts((d) => ({ ...d, [variantId]: value }));
+  }
+
+  function bumpDraft(variantId: string, current: number, delta: number) {
+    const raw = draftFor(variantId, current);
+    const n = parseInt(raw || "0", 10);
+    const base = Number.isNaN(n) ? current : n;
+    setDraft(variantId, String(Math.max(0, base + delta)));
+  }
+
+  async function saveStock(variantId: string, current: number) {
+    const raw = draftFor(variantId, current);
+    const n = parseInt(raw || "0", 10);
+    if (Number.isNaN(n) || n < 0) {
+      toast.error("Enter a valid stock number.");
+      return;
+    }
+    if (n === current) {
+      setStockDrafts((d) => {
+        const { [variantId]: _drop, ...rest } = d;
+        return rest;
+      });
+      return;
+    }
     setStockBusy(variantId);
     const { error } = await supabase
       .from("product_variants")
@@ -209,8 +219,14 @@ function AdminDashboard() {
       toast.error(error.message);
       return;
     }
+    setStockDrafts((d) => {
+      const { [variantId]: _drop, ...rest } = d;
+      return rest;
+    });
+    toast.success("Stock updated.");
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
