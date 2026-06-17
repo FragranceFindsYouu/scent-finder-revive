@@ -56,6 +56,33 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          id: string
+          items: Json
+          review_token: string
+          stripe_session_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          items?: Json
+          review_token?: string
+          stripe_session_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          items?: Json
+          review_token?: string
+          stripe_session_id?: string
+        }
+        Relationships: []
+      }
       product_variants: {
         Row: {
           created_at: string
@@ -144,6 +171,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          customer_name: string
+          id: string
+          order_id: string
+          product_handle: string
+          rating: number
+          review_text: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          id?: string
+          order_id: string
+          product_handle: string
+          rating: number
+          review_text?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          order_id?: string
+          product_handle?: string
+          rating?: number
+          review_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
