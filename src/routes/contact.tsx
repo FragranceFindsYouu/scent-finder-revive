@@ -68,22 +68,24 @@ function Contact() {
         </button>
       </form>
 
-      <div className="mt-16 pt-10 border-t border-border grid sm:grid-cols-3 gap-8 text-sm">
+      <div className="mt-16 pt-10 border-t border-border space-y-10 text-sm">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</p>
-          <a href="mailto:Fragrancefindsyouu@gmail.com" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">Fragrancefindsyouu@gmail.com</a>
+          <a href="mailto:Fragrancefindsyouu@gmail.com" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose break-all">Fragrancefindsyouu@gmail.com</a>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Instagram</p>
-          <a href="https://www.instagram.com/fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">TikTok</p>
-          <a href="http://www.tiktok.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">YouTube</p>
-          <a href="https://youtube.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+        <div className="grid sm:grid-cols-3 gap-8">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Instagram</p>
+            <a href="https://www.instagram.com/fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">TikTok</p>
+            <a href="http://www.tiktok.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">YouTube</p>
+            <a href="https://youtube.com/@fragrancefindsyou" target="_blank" rel="noreferrer" className="mt-2 inline-block font-display text-xl text-primary hover:text-rose">@fragrancefindsyou</a>
+          </div>
         </div>
       </div>
     </div>

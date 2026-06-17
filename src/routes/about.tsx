@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import aboutImg from "@/assets/about-decants.jpg";
+import parisVideo from "@/assets/paris.mp4.asset.json";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -28,7 +28,7 @@ function About() {
 
       <section className="mx-auto max-w-6xl px-6 lg:px-10 grid md:grid-cols-2 gap-14 items-center pb-24">
         <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-soft">
-          <img src={aboutImg} alt="Decant vials with pipette and rose petals" loading="lazy" width={1200} height={1400} className="h-full w-full object-cover" />
+          <video src={parisVideo.url} autoPlay loop muted playsInline className="h-full w-full object-cover" />
         </div>
         <div className="space-y-6 font-serif text-lg leading-relaxed text-foreground/85">
           <p className="font-display text-3xl text-primary italic">"One day, my own bottle."</p>
@@ -36,7 +36,7 @@ function About() {
             Every decant I pour goes into a small fund: tuition for perfumery school in Paris. I want to learn how scent is composed — how a single note becomes a story — and eventually create fragrances of my own.
           </p>
           <p>
-            Until then, I want you to be able to <em>try</em> the world's most beautiful fragrances without committing to a $300 bottle. Decanting is how scent should be discovered: slowly, intimately, in a 5ml glass vial that lives in your bag for a week.
+            Until then, I want you to be able to <em>try</em> the world's most beautiful fragrances without committing to a $300 bottle. Decanting is how scent should be discovered: slowly, intimately, in a little glass vial that lives in your bag for a week.
           </p>
           <p>
             Thank you for being part of this. Truly.
