@@ -59,10 +59,14 @@ export type Database = {
       products: {
         Row: {
           available: boolean
+          category: string
           created_at: string
+          description: string
           handle: string
           id: string
           image: string
+          image_url: string
+          inventory_count: number
           price: number
           sort_order: number
           title: string
@@ -70,10 +74,14 @@ export type Database = {
         }
         Insert: {
           available?: boolean
+          category?: string
           created_at?: string
+          description?: string
           handle: string
           id?: string
           image?: string
+          image_url?: string
+          inventory_count?: number
           price?: number
           sort_order?: number
           title: string
@@ -81,10 +89,14 @@ export type Database = {
         }
         Update: {
           available?: boolean
+          category?: string
           created_at?: string
+          description?: string
           handle?: string
           id?: string
           image?: string
+          image_url?: string
+          inventory_count?: number
           price?: number
           sort_order?: number
           title?: string
