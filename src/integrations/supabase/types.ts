@@ -56,30 +56,83 @@ export type Database = {
         }
         Relationships: []
       }
-      orders: {
+      order_notifications: {
         Row: {
           created_at: string
-          customer_email: string | null
           id: string
-          items: Json
-          review_token: string
-          stripe_session_id: string
+          notification_type: string
+          order_id: string
         }
         Insert: {
           created_at?: string
-          customer_email?: string | null
           id?: string
-          items?: Json
-          review_token?: string
-          stripe_session_id: string
+          notification_type: string
+          order_id: string
         }
         Update: {
           created_at?: string
+          id?: string
+          notification_type?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          items: Json
+          payment_intent_id: string | null
+          refunded_at: string | null
+          review_token: string
+          shipping_address: Json | null
+          status: string
+          stripe_session_id: string
+          total_amount_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
           customer_email?: string | null
+          customer_name?: string | null
           id?: string
           items?: Json
+          payment_intent_id?: string | null
+          refunded_at?: string | null
           review_token?: string
+          shipping_address?: Json | null
+          status?: string
+          stripe_session_id: string
+          total_amount_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          items?: Json
+          payment_intent_id?: string | null
+          refunded_at?: string | null
+          review_token?: string
+          shipping_address?: Json | null
+          status?: string
           stripe_session_id?: string
+          total_amount_cents?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -257,12 +310,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_variant_stock: {
+        Args: { _qty: number; _variant_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_variant_stock: {
+        Args: { _qty: number; _variant_id: string }
+        Returns: number
       }
     }
     Enums: {
