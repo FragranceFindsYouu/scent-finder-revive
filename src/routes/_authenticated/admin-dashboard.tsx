@@ -234,14 +234,18 @@ function AdminDashboard() {
 
           <label className="block">
             <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Image URL
+              Product image
             </span>
             <input
-              value={form.image_url}
-              onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-              placeholder="https://…"
-              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 outline-none focus:border-rose"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={uploading}
+              className="mt-1.5 w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary file:text-primary-foreground file:px-4 file:py-2 file:text-xs file:uppercase file:tracking-[0.18em] hover:file:bg-rose disabled:opacity-60"
             />
+            {uploading && (
+              <span className="mt-2 block text-xs text-muted-foreground">Uploading…</span>
+            )}
           </label>
 
           {form.image_url && (
