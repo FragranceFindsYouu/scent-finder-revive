@@ -9,6 +9,8 @@ import {
 } from "@/lib/products";
 import { toast } from "sonner";
 import { importShopifyCSV } from "@/lib/shopifyImport";
+import { Check, Loader2, Minus, Plus } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
   head: () => ({
@@ -66,6 +68,8 @@ function AdminDashboard() {
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
   const [stockBusy, setStockBusy] = useState<string | null>(null);
+  const [stockDrafts, setStockDrafts] = useState<Record<string, string>>({});
+
 
   async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -176,25 +180,35 @@ function AdminDashboard() {
     setVariants((vs) => (vs.length === 1 ? vs : vs.filter((v) => v.key !== key)));
   }
 
-  async function adjustStock(variantId: string, currentStock: number, delta: number) {
-    const next = Math.max(0, currentStock + delta);
-    if (next === currentStock) return;
-    setStockBusy(variantId);
-    const { error } = await supabase
-      .from("product_variants")
-      .update({ stock_count: next })
-      .eq("id", variantId);
-    setStockBusy(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ["products"] });
+  function draftFor(variantId: string, current: number): string {
+    return stockDrafts[variantId] ?? String(current);
   }
 
-  async function setStockExact(variantId: string, value: string) {
-    const n = parseInt(value || "0", 10);
-    if (Number.isNaN(n) || n < 0) return;
+  function setDraft(variantId: string, value: string) {
+    setStockDrafts((d) => ({ ...d, [variantId]: value }));
+  }
+
+  function bumpDraft(variantId: string, current: number, delta: number) {
+    const raw = draftFor(variantId, current);
+    const n = parseInt(raw || "0", 10);
+    const base = Number.isNaN(n) ? current : n;
+    setDraft(variantId, String(Math.max(0, base + delta)));
+  }
+
+  async function saveStock(variantId: string, current: number) {
+    const raw = draftFor(variantId, current);
+    const n = parseInt(raw || "0", 10);
+    if (Number.isNaN(n) || n < 0) {
+      toast.error("Enter a valid stock number.");
+      return;
+    }
+    if (n === current) {
+      setStockDrafts((d) => {
+        const { [variantId]: _drop, ...rest } = d;
+        return rest;
+      });
+      return;
+    }
     setStockBusy(variantId);
     const { error } = await supabase
       .from("product_variants")
@@ -205,8 +219,14 @@ function AdminDashboard() {
       toast.error(error.message);
       return;
     }
+    setStockDrafts((d) => {
+      const { [variantId]: _drop, ...rest } = d;
+      return rest;
+    });
+    toast.success("Stock updated.");
     queryClient.invalidateQueries({ queryKey: ["products"] });
   }
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -590,13 +610,17 @@ function AdminDashboard() {
                         </div>
 
                         {p.variants.length > 0 && (
-                          <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                          <ul className="mt-3 space-y-2">
                             {p.variants.map((v) => {
                               const busy = stockBusy === v.id;
+                              const draft = draftFor(v.id, v.stock_count);
+                              const parsed = parseInt(draft || "0", 10);
+                              const dirty =
+                                !Number.isNaN(parsed) && parsed !== v.stock_count;
                               return (
-                                <div
+                                <li
                                   key={v.id}
-                                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2"
+                                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2"
                                 >
                                   <div className="text-sm">
                                     <span className="font-medium text-foreground">
@@ -605,30 +629,29 @@ function AdminDashboard() {
                                     <span className="text-rose">
                                       ${v.price.toFixed(2)}
                                     </span>
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      in stock: {v.stock_count}
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <button
                                       type="button"
                                       aria-label={`Decrease ${v.size} stock`}
-                                      disabled={busy || v.stock_count <= 0}
-                                      onClick={() => adjustStock(v.id, v.stock_count, -1)}
-                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                      disabled={busy || parsed <= 0}
+                                      onClick={() => bumpDraft(v.id, v.stock_count, -1)}
+                                      className="h-7 w-7 grid place-items-center rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
                                     >
-                                      −
+                                      <Minus size={14} />
                                     </button>
                                     <input
                                       type="number"
                                       min="0"
-                                      defaultValue={v.stock_count}
-                                      key={`${v.id}-${v.stock_count}`}
-                                      onBlur={(e) => {
-                                        if (parseInt(e.target.value, 10) !== v.stock_count) {
-                                          setStockExact(v.id, e.target.value);
-                                        }
-                                      }}
+                                      value={draft}
+                                      onChange={(e) => setDraft(v.id, e.target.value)}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
-                                          (e.target as HTMLInputElement).blur();
+                                          e.preventDefault();
+                                          saveStock(v.id, v.stock_count);
                                         }
                                       }}
                                       className="w-14 rounded-md border border-border bg-background px-2 py-1 text-center text-sm outline-none focus:border-rose"
@@ -637,17 +660,36 @@ function AdminDashboard() {
                                       type="button"
                                       aria-label={`Increase ${v.size} stock`}
                                       disabled={busy}
-                                      onClick={() => adjustStock(v.id, v.stock_count, 1)}
-                                      className="h-7 w-7 rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
+                                      onClick={() => bumpDraft(v.id, v.stock_count, 1)}
+                                      className="h-7 w-7 grid place-items-center rounded-full border border-border text-foreground hover:border-rose hover:text-rose disabled:opacity-40"
                                     >
-                                      +
+                                      <Plus size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label={`Save stock for ${v.size}`}
+                                      title="Save stock"
+                                      disabled={busy || !dirty}
+                                      onClick={() => saveStock(v.id, v.stock_count)}
+                                      className={`h-7 w-7 grid place-items-center rounded-full border ml-1 transition ${
+                                        dirty
+                                          ? "border-rose bg-rose text-primary-foreground hover:opacity-90"
+                                          : "border-border text-muted-foreground/50 cursor-not-allowed"
+                                      }`}
+                                    >
+                                      {busy ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                      ) : (
+                                        <Check size={14} />
+                                      )}
                                     </button>
                                   </div>
-                                </div>
+                                </li>
                               );
                             })}
-                          </div>
+                          </ul>
                         )}
+
                       </div>
                     </div>
                   </div>
