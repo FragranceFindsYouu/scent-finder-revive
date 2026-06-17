@@ -115,7 +115,7 @@ function AdminOrdersPage() {
             Every paid order, newest first. Click a row to view details or issue a refund.
           </p>
         </div>
-        <Link to="/_authenticated/admin-dashboard" className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground">
+        <Link to="/admin-dashboard" className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground">
           ← Dashboard
         </Link>
       </div>
