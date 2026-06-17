@@ -68,6 +68,8 @@ function AdminDashboard() {
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ done: number; total: number; title: string } | null>(null);
   const [stockBusy, setStockBusy] = useState<string | null>(null);
+  const [stockDrafts, setStockDrafts] = useState<Record<string, string>>({});
+
 
   async function handleShopifyImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
