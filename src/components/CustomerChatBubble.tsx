@@ -13,15 +13,15 @@ export function CustomerChatBubble() {
         type="button"
         aria-label={open ? "Close chat" : "Open chat"}
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-24 right-5 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 hover:bg-rose overflow-hidden"
+        className="fixed bottom-24 right-5 z-50 inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 hover:bg-rose overflow-hidden ring-2 ring-primary/30"
       >
         {open ? (
-          <X className="h-6 w-6" />
+          <X className="h-7 w-7" />
         ) : (
           <img
             src={bottleUrl}
             alt=""
-            className="h-10 w-10 object-contain"
+            className="h-[68px] w-[68px] object-contain"
             style={{ imageRendering: "pixelated" }}
           />
         )}
