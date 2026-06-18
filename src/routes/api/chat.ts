@@ -54,7 +54,8 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const isAdminMode = system === "admin";
-        let adminTools: Record<string, ReturnType<typeof tool>> | undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let adminTools: Record<string, any> | undefined;
 
         if (isAdminMode) {
           // Verify the caller is an authenticated admin.
