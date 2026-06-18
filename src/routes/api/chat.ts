@@ -17,9 +17,14 @@ type ChatRequestBody = {
 
 const CUSTOMER_SYSTEM = `You are the friendly customer concierge for Fragrance Finds You (FFY), a luxury fragrance boutique. Help shoppers discover scents, explain notes (top, heart, base), suggest pairings for moods or seasons, and answer questions about orders, shipping, and returns in a warm, concise tone. If you don't know something specific about an order, tell the customer to contact support via the Contact page.`;
 
-const ADMIN_SYSTEM = `You are the personal admin copilot for the owner of Fragrance Finds You (FFY). You have FULL operational access to the store via tools: list/create/update/delete products, manage variants (sizes), and adjust stock.
+const ADMIN_SYSTEM = `You are the personal admin copilot for the owner of Fragrance Finds You (FFY). You have FULL operational control of the store via tools:
+- Products & variants: list/create/update/delete products, add/update/delete sizes, adjust stock and prices.
+- Orders: list orders, change status (cancel, refund, mark oversold).
+- Reviews: list and delete customer reviews.
+- Site content: list and edit on-page text/styles via site_settings (hero copy, headlines, etc.).
+- Customer ops: read contact messages, read newsletter subscribers, get store stats (revenue, counts).
 
-When the owner asks you to do something (e.g. "add a new product called X with a 5ml at $40"), DO IT by calling the appropriate tools — don't just describe what should be done. Make reasonable assumptions for missing fields (default stock 10, sensible category) and tell the owner what you did. Always confirm destructive actions (delete) by stating exactly what's about to happen, then proceed. Use markdown tables/lists when reporting results. Be direct and efficient.`;
+When the owner gives you a command, EXECUTE it by calling the right tools instead of describing what should be done. Chain multiple tool calls when needed (e.g. list_products to find an ID, then update_variant). Make reasonable defaults (stock 10, sensible categories). For destructive actions (delete, refund, cancel), state exactly what you're about to do, then proceed. Report results crisply with markdown lists/tables. Be direct and efficient.`;
 
 function slugify(s: string) {
   return s
@@ -277,6 +282,184 @@ export const Route = createFileRoute("/api/chat")({
                   .eq("id", variant_id);
                 if (error) return { error: error.message };
                 return { ok: true };
+              },
+            }),
+
+            list_orders: tool({
+              description:
+                "List recent orders with status, totals, items, customer info. Optionally filter by status.",
+              inputSchema: z.object({
+                status: z
+                  .enum(["paid", "cancelled", "refunded", "oversold"])
+                  .optional(),
+                limit: z.number().int().min(1).max(200).default(50),
+              }),
+              execute: async ({ status, limit }) => {
+                let q = supabaseAdmin
+                  .from("orders")
+                  .select(
+                    "id, customer_email, customer_name, status, total_amount_cents, items, shipping_address, created_at, payment_intent_id",
+                  )
+                  .order("created_at", { ascending: false })
+                  .limit(limit);
+                if (status) q = q.eq("status", status);
+                const { data, error } = await q;
+                if (error) return { error: error.message };
+                return { orders: data };
+              },
+            }),
+
+            update_order_status: tool({
+              description:
+                "Update an order's status (paid, cancelled, refunded, oversold).",
+              inputSchema: z.object({
+                order_id: z.string().uuid(),
+                status: z.enum(["paid", "cancelled", "refunded", "oversold"]),
+              }),
+              execute: async ({ order_id, status }) => {
+                const patch: Record<string, unknown> = { status };
+                if (status === "cancelled") patch.cancelled_at = new Date().toISOString();
+                if (status === "refunded") patch.refunded_at = new Date().toISOString();
+                const { error } = await supabaseAdmin
+                  .from("orders")
+                  .update(patch as never)
+                  .eq("id", order_id);
+                if (error) return { error: error.message };
+                return { ok: true };
+              },
+            }),
+
+            list_reviews: tool({
+              description: "List customer reviews, optionally filtered by product handle.",
+              inputSchema: z.object({
+                product_handle: z.string().optional(),
+                limit: z.number().int().min(1).max(200).default(50),
+              }),
+              execute: async ({ product_handle, limit }) => {
+                let q = supabaseAdmin
+                  .from("reviews")
+                  .select("id, product_handle, customer_name, rating, review_text, created_at")
+                  .order("created_at", { ascending: false })
+                  .limit(limit);
+                if (product_handle) q = q.eq("product_handle", product_handle);
+                const { data, error } = await q;
+                if (error) return { error: error.message };
+                return { reviews: data };
+              },
+            }),
+
+            delete_review: tool({
+              description: "Permanently delete a customer review.",
+              inputSchema: z.object({ review_id: z.string().uuid() }),
+              execute: async ({ review_id }) => {
+                const { error } = await supabaseAdmin
+                  .from("reviews")
+                  .delete()
+                  .eq("id", review_id);
+                if (error) return { error: error.message };
+                return { ok: true };
+              },
+            }),
+
+            list_site_settings: tool({
+              description:
+                "List editable site content blocks (hero copy, headlines, etc.) and their current text.",
+              inputSchema: z.object({
+                search: z.string().optional().describe("Filter element_id by substring"),
+              }),
+              execute: async ({ search }) => {
+                let q = supabaseAdmin
+                  .from("site_settings")
+                  .select("element_id, content, styles, updated_at")
+                  .order("element_id");
+                if (search) q = q.ilike("element_id", `%${search}%`);
+                const { data, error } = await q;
+                if (error) return { error: error.message };
+                return { settings: data };
+              },
+            }),
+
+            update_site_setting: tool({
+              description:
+                "Update or create a site content block by element_id (used for editable headlines, hero copy, etc.). Upserts.",
+              inputSchema: z.object({
+                element_id: z.string().min(1),
+                content: z.string().optional(),
+                styles: z.record(z.string(), z.unknown()).optional(),
+              }),
+              execute: async ({ element_id, content, styles }) => {
+                const row: Record<string, unknown> = { element_id };
+                if (content !== undefined) row.content = content;
+                if (styles !== undefined) row.styles = styles;
+                const { error } = await supabaseAdmin
+                  .from("site_settings")
+                  .upsert(row as never, { onConflict: "element_id" });
+                if (error) return { error: error.message };
+                return { ok: true };
+              },
+            }),
+
+            list_contact_messages: tool({
+              description: "Read contact form submissions from customers.",
+              inputSchema: z.object({
+                limit: z.number().int().min(1).max(200).default(50),
+              }),
+              execute: async ({ limit }) => {
+                const { data, error } = await supabaseAdmin
+                  .from("contact_messages")
+                  .select("id, name, email, message, created_at")
+                  .order("created_at", { ascending: false })
+                  .limit(limit);
+                if (error) return { error: error.message };
+                return { messages: data };
+              },
+            }),
+
+            list_newsletter_subscribers: tool({
+              description: "Read the newsletter subscriber list.",
+              inputSchema: z.object({
+                limit: z.number().int().min(1).max(1000).default(200),
+              }),
+              execute: async ({ limit }) => {
+                const { data, error } = await supabaseAdmin
+                  .from("newsletter_subscribers")
+                  .select("id, email, created_at")
+                  .order("created_at", { ascending: false })
+                  .limit(limit);
+                if (error) return { error: error.message };
+                return { subscribers: data };
+              },
+            }),
+
+            store_stats: tool({
+              description:
+                "Get a quick snapshot: total products, total orders, revenue (paid only), review count, subscriber count.",
+              inputSchema: z.object({}),
+              execute: async () => {
+                const [products, orders, paidOrders, reviews, subs] = await Promise.all([
+                  supabaseAdmin.from("products").select("id", { count: "exact", head: true }),
+                  supabaseAdmin.from("orders").select("id", { count: "exact", head: true }),
+                  supabaseAdmin
+                    .from("orders")
+                    .select("total_amount_cents")
+                    .eq("status", "paid"),
+                  supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }),
+                  supabaseAdmin
+                    .from("newsletter_subscribers")
+                    .select("id", { count: "exact", head: true }),
+                ]);
+                const revenueCents = (paidOrders.data ?? []).reduce(
+                  (s, o: { total_amount_cents: number | null }) =>
+                    s + (o.total_amount_cents ?? 0),
+                  0,
+                );
+                return {
+                  products: products.count ?? 0,
+                  orders: orders.count ?? 0,
+                  revenue_usd: (revenueCents / 100).toFixed(2),
+                  reviews: reviews.count ?? 0,
+                  subscribers: subs.count ?? 0,
+                };
               },
             }),
           };
