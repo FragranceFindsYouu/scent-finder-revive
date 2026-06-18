@@ -9,7 +9,7 @@ export function SprayIntro() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), 1800);
+    const t = setTimeout(() => setVisible(false), 2800);
     return () => clearTimeout(t);
   }, []);
 
@@ -26,9 +26,9 @@ export function SprayIntro() {
         <img
           src={bottleUrl}
           alt=""
-          width={200}
-          height={200}
-          className="block select-none drop-shadow-[0_10px_24px_rgba(0,0,0,0.2)]"
+          width={360}
+          height={360}
+          className="block select-none drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
           style={{ imageRendering: "pixelated" }}
         />
 
