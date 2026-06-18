@@ -1,9 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { EditableText } from "@/lib/siteSettings";
-import { useIsAdmin } from "@/lib/useIsAdmin";
 
 export function Footer() {
-  const { isAdmin } = useIsAdmin();
   return (
     <footer className="mt-32 border-t border-border/60 bg-cream/40">
       <div className="mx-auto max-w-7xl px-6 lg:px-10 py-16 grid gap-12 md:grid-cols-3">
@@ -38,12 +36,8 @@ export function Footer() {
       </div>
       <div className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
         <EditableText id="footer.copyright">© 2025 Fragrance Finds You · Independent decants. Not affiliated with any brand.</EditableText>
-        {isAdmin && (
-          <>
-            <span className="mx-2 opacity-50">·</span>
-            <Link to="/admin-dashboard" className="hover:text-rose transition-colors">Admin</Link>
-          </>
-        )}
+        <span className="mx-2 opacity-50">·</span>
+        <Link to="/auth" className="hover:text-rose transition-colors opacity-70">Admin</Link>
       </div>
     </footer>
   );
