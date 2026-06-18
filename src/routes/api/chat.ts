@@ -197,7 +197,7 @@ export const Route = createFileRoute("/api/chat")({
                 if (patch.title) update.handle = slugify(patch.title);
                 const { error } = await supabaseAdmin
                   .from("products")
-                  .update(update)
+                  .update(update as never)
                   .eq("id", product_id);
                 if (error) return { error: error.message };
                 return { ok: true };
@@ -260,7 +260,7 @@ export const Route = createFileRoute("/api/chat")({
                 }
                 const { error } = await supabaseAdmin
                   .from("product_variants")
-                  .update(update)
+                  .update(update as never)
                   .eq("id", variant_id);
                 if (error) return { error: error.message };
                 return { ok: true };
