@@ -143,13 +143,13 @@
   100% { opacity: 0; }
 }
 
-.spray-fade { animation: spray-fade-out 1.8s ease-out forwards; }
+.spray-fade { animation: spray-fade-out 2.8s ease-out forwards; background: rgba(255,255,255,0.55); backdrop-filter: blur(2px); }
 .spray-wash {
-  background: radial-gradient(ellipse at center, rgba(247,210,122,0.35), rgba(247,210,122,0) 60%);
-  animation: spray-wash-in 1.6s ease-out forwards;
+  background: radial-gradient(ellipse at center, rgba(247,210,122,0.45), rgba(247,210,122,0) 60%);
+  animation: spray-wash-in 2.6s ease-out forwards;
 }
 .spray-bottle-wrap {
-  animation: spray-bottle-pop 1.6s cubic-bezier(.2,.8,.2,1) forwards;
+  animation: spray-bottle-pop 2.4s cubic-bezier(.2,.8,.2,1) forwards;
 }
 .spray-mist-origin {
   position: absolute;
