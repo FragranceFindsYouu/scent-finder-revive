@@ -40,12 +40,12 @@ export function ChatWidget({
       new DefaultChatTransport({
         api: "/api/chat",
         body: { system },
-        headers: async () => {
+        headers: (async (): Promise<Record<string, string>> => {
           if (system !== "admin") return {};
           const { data } = await supabase.auth.getSession();
           const token = data.session?.access_token;
           return token ? { Authorization: `Bearer ${token}` } : {};
-        },
+        }) as unknown as Record<string, string>,
       }),
     [system],
   );
