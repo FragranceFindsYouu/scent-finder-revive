@@ -1,6 +1,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Conversation,
   ConversationContent,
@@ -26,8 +27,6 @@ type ChatWidgetProps = {
   className?: string;
 };
 
-const transport = new DefaultChatTransport({ api: "/api/chat" });
-
 export function ChatWidget({
   id,
   system,
@@ -36,14 +35,24 @@ export function ChatWidget({
   emptyDescription,
   className,
 }: ChatWidgetProps) {
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+        body: { system },
+        headers: (async (): Promise<Record<string, string>> => {
+          if (system !== "admin") return {};
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        }) as unknown as Record<string, string>,
+      }),
+    [system],
+  );
+
   const { messages, sendMessage, status, error, stop } = useChat({
     id,
     transport,
-    // Inject which system prompt the server should use
-    // by augmenting the request body on each send.
-    // (DefaultChatTransport spreads body fields into the POST payload.)
-    // @ts-expect-error - body prop is supported by DefaultChatTransport at runtime
-    body: { system },
   });
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
