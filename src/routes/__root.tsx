@@ -21,6 +21,7 @@ import { EditModeProvider, EditModeFloatingToggle } from "../lib/editMode";
 import { SiteSettingsProvider } from "../lib/siteSettings";
 import { LayoutCustomizer, ApplyBgTheme } from "../components/LayoutCustomizer";
 import { SprayIntro } from "../components/SprayIntro";
+import { CustomerChatBubble } from "../components/CustomerChatBubble";
 
 function NotFoundComponent() {
   return (
@@ -129,6 +130,7 @@ function RootComponent() {
             <Toaster />
             <EditModeFloatingToggle />
             <LayoutCustomizer />
+            <CustomerChatBubble />
           </EditModeProvider>
         </SiteSettingsProvider>
       </CartProvider>
