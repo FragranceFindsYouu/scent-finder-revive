@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import bottleUrl from "@/assets/ffy-bottle.png";
 
 /**
- * Plays a one-shot perfume spray animation each time the app shell mounts
- * (i.e. on page refresh / first load).
+ * Plays a one-shot perfume spray animation each time the app shell mounts.
+ * Renders multiple bottles at varied positions, each emitting mist.
  */
 export function SprayIntro() {
   const [visible, setVisible] = useState(true);
@@ -12,6 +12,17 @@ export function SprayIntro() {
     const t = setTimeout(() => setVisible(false), 2800);
     return () => clearTimeout(t);
   }, []);
+
+  const bottles = useMemo(
+    () => [
+      { top: "30%", left: "20%", size: 260, rotate: -10, delay: 0 },
+      { top: "55%", left: "78%", size: 300, rotate: 12, delay: 120 },
+      { top: "70%", left: "35%", size: 220, rotate: -6, delay: 240 },
+      { top: "25%", left: "65%", size: 240, rotate: 8, delay: 80 },
+      { top: "50%", left: "50%", size: 360, rotate: -4, delay: 60 },
+    ],
+    [],
+  );
 
   if (!visible) return null;
 
@@ -22,35 +33,46 @@ export function SprayIntro() {
     >
       <div className="absolute inset-0 spray-wash" />
 
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 spray-bottle-wrap">
-        <img
-          src={bottleUrl}
-          alt=""
-          width={360}
-          height={360}
-          className="block select-none drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
-          style={{ imageRendering: "pixelated" }}
-        />
-
-        {/* mist particles emerging from the nozzle (top-right of bottle) */}
+      {bottles.map((b, idx) => (
         <div
-          className="spray-mist-origin"
-          style={{ position: "absolute", top: "18%", left: "62%" }}
+          key={idx}
+          className="absolute spray-bottle-wrap"
+          style={{
+            top: b.top,
+            left: b.left,
+            transform: `translate(-50%, -50%) rotate(${b.rotate}deg)`,
+            animationDelay: `${b.delay}ms`,
+          }}
         >
-          {Array.from({ length: 18 }).map((_, i) => (
-            <span
-              key={i}
-              className="spray-particle"
-              style={{
-                ["--angle" as never]: `${-70 + i * 7}deg`,
-                ["--delay" as never]: `${i * 18}ms`,
-                ["--dist" as never]: `${160 + (i % 4) * 40}px`,
-                ["--size" as never]: `${20 + (i % 5) * 7}px`,
-              }}
+          <div className="relative">
+            <img
+              src={bottleUrl}
+              alt=""
+              width={b.size}
+              height={b.size}
+              className="block select-none drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
+              style={{ imageRendering: "pixelated" }}
             />
-          ))}
+            <div
+              className="spray-mist-origin"
+              style={{ position: "absolute", top: "18%", left: "62%" }}
+            >
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="spray-particle"
+                  style={{
+                    ["--angle" as never]: `${-70 + i * 9}deg`,
+                    ["--delay" as never]: `${b.delay + i * 22}ms`,
+                    ["--dist" as never]: `${140 + (i % 4) * 40}px`,
+                    ["--size" as never]: `${18 + (i % 5) * 7}px`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
