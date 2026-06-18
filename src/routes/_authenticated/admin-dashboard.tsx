@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { importShopifyCSV } from "@/lib/shopifyImport";
 import { ArrowDown, ArrowUp, Check, Loader2, Minus, Plus, X } from "lucide-react";
+import { AdminCopilot } from "@/components/AdminCopilot";
 
 
 export const Route = createFileRoute("/_authenticated/admin-dashboard")({
@@ -428,6 +429,9 @@ function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 lg:px-10 py-16">
+      <div className="mb-8">
+        <AdminCopilot />
+      </div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-rose">Admin Dashboard</p>
