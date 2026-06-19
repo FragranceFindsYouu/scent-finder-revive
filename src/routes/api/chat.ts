@@ -474,7 +474,57 @@ export const Route = createFileRoute("/api/chat")({
                 };
               },
             }),
-          };
+
+            generate_image: tool({
+              description:
+                "Generate an image from a text prompt (illustrations, product mockups, scenes, etc.). Returns a URL to embed in the reply with markdown ![](url).",
+              inputSchema: z.object({
+                prompt: z
+                  .string()
+                  .min(3)
+                  .describe("Vivid, detailed description of the desired image."),
+                size: z
+                  .enum(["1024x1024", "1024x1536", "1536x1024"])
+                  .optional()
+                  .default("1024x1024"),
+              }),
+              execute: async ({ prompt, size }) => {
+                const lovableKey = process.env.LOVABLE_API_KEY;
+                if (!lovableKey)
+                  return { error: "Image generation is not configured (missing LOVABLE_API_KEY)." };
+                try {
+                  const r = await fetch(
+                    "https://ai.gateway.lovable.dev/v1/images/generations",
+                    {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${lovableKey}`,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        model: "openai/gpt-image-2",
+                        prompt,
+                        size,
+                        quality: "low",
+                        n: 1,
+                      }),
+                    },
+                  );
+                  if (!r.ok) {
+                    const text = await r.text().catch(() => "");
+                    return { error: `Image API ${r.status}: ${text.slice(0, 200)}` };
+                  }
+                  const json = (await r.json()) as {
+                    data?: Array<{ b64_json?: string }>;
+                  };
+                  const b64 = json.data?.[0]?.b64_json;
+                  if (!b64) return { error: "No image returned." };
+                  return { url: `data:image/png;base64,${b64}` };
+                } catch (e) {
+                  return { error: e instanceof Error ? e.message : "Image generation failed." };
+                }
+              },
+            }),
         }
 
         const systemPrompt = isAdminMode ? ADMIN_SYSTEM : CUSTOMER_SYSTEM;
