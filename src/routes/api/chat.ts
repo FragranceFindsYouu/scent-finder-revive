@@ -525,6 +525,7 @@ export const Route = createFileRoute("/api/chat")({
                 }
               },
             }),
+          };
         }
 
         const systemPrompt = isAdminMode ? ADMIN_SYSTEM : CUSTOMER_SYSTEM;
