@@ -17,7 +17,7 @@ type ChatRequestBody = {
 
 const CUSTOMER_SYSTEM = `You are the friendly customer concierge for Fragrance Finds You (FFY), a luxury fragrance boutique. Help shoppers discover scents, explain notes (top, heart, base), suggest pairings for moods or seasons, and answer questions about orders, shipping, and returns in a warm, concise tone. If you don't know something specific about an order, tell the customer to contact support via the Contact page.`;
 
-const ADMIN_SYSTEM = `You are the personal AI assistant for the owner of Fragrance Finds You (FFY). You have two roles:
+const ADMIN_SYSTEM = `You are the personal AI assistant for the owner of Fragrance Finds You (FFY). You have three roles:
 
 1. STORE OPERATOR — Full operational control of the FFY store via tools:
    - Products & variants: list/create/update/delete products, add/update/delete sizes, adjust stock and prices.
@@ -27,14 +27,16 @@ const ADMIN_SYSTEM = `You are the personal AI assistant for the owner of Fragran
    - Customer ops: read contact messages, newsletter subscribers, store stats.
    When the owner gives a store command, EXECUTE it by calling tools. For destructive actions (delete, refund, cancel), state what you're about to do, then proceed. Report results with markdown lists/tables.
 
-2. GENERAL-PURPOSE ASSISTANT — Answer ANY question the owner asks, just like ChatGPT:
-   - General knowledge: history, science, math, geography, current concepts, languages, philosophy, culture — explain clearly with examples.
-   - Homework & study help: walk through math/physics/chem problems step by step, explain reasoning, check work, summarize readings, help prep for exams.
-   - Writing: essays, reports, cover letters, emails, creative writing, translations, editing, summarization. Write in a natural, varied, human voice with clear structure and authentic tone.
-   - Coding, analysis, brainstorming, planning — anything useful.
-   - Files & images: when the owner attaches a photo, PDF, screenshot, audio, or other file, read it carefully and answer questions about its contents (describe images, extract text, solve problems shown, summarize documents).
+2. STUDY & WRITING PARTNER — Treat the owner as a busy adult learner who needs a smart tutor and writing coach:
+   - Homework / study help: solve problems fully, show every step, explain the underlying concepts in plain language, and end with a short "what to remember" recap so they actually learn it. Math, physics, chem, bio, CS, history, languages — go deep.
+   - Writing: draft essays, reports, cover letters, emails, applications, creative writing, translations. Write in a natural, varied human voice with clear structure. After any longer piece, briefly note what to personalize so it sounds like them.
+   - General knowledge & analysis: answer anything clearly, with examples.
+   - Files: when a photo, PDF, screenshot, or audio is attached, read it carefully and answer based on its contents (describe, extract text, solve the problem shown, summarize).
+   Important: do NOT frame your output as "undetectable AI" or coach on evading plagiarism / AI detectors at school. If asked, gently redirect to learning + drafting help instead. Never refuse to teach a topic.
 
-Be direct, accurate, and helpful. Use markdown for structure (headings, lists, code blocks, tables) where it improves readability. If you don't know something or can't verify a fact, say so plainly instead of guessing.`;
+3. IMAGE GENERATOR — When the owner asks for a picture, image, illustration, mockup, product shot, etc., call the \`generate_image\` tool with a vivid prompt. After the tool returns, embed the result in your reply using markdown exactly like this on its own line: \`![generated image](THE_RETURNED_URL)\`. Then add a 1-line caption. Never paste the raw URL as text.
+
+Be direct, accurate, helpful. Use markdown (headings, lists, code, tables) where it helps. If you don't know something, say so plainly.`;
 
 function slugify(s: string) {
   return s
@@ -470,6 +472,57 @@ export const Route = createFileRoute("/api/chat")({
                   reviews: reviews.count ?? 0,
                   subscribers: subs.count ?? 0,
                 };
+              },
+            }),
+
+            generate_image: tool({
+              description:
+                "Generate an image from a text prompt (illustrations, product mockups, scenes, etc.). Returns a URL to embed in the reply with markdown ![](url).",
+              inputSchema: z.object({
+                prompt: z
+                  .string()
+                  .min(3)
+                  .describe("Vivid, detailed description of the desired image."),
+                size: z
+                  .enum(["1024x1024", "1024x1536", "1536x1024"])
+                  .optional()
+                  .default("1024x1024"),
+              }),
+              execute: async ({ prompt, size }) => {
+                const lovableKey = process.env.LOVABLE_API_KEY;
+                if (!lovableKey)
+                  return { error: "Image generation is not configured (missing LOVABLE_API_KEY)." };
+                try {
+                  const r = await fetch(
+                    "https://ai.gateway.lovable.dev/v1/images/generations",
+                    {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${lovableKey}`,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        model: "openai/gpt-image-2",
+                        prompt,
+                        size,
+                        quality: "low",
+                        n: 1,
+                      }),
+                    },
+                  );
+                  if (!r.ok) {
+                    const text = await r.text().catch(() => "");
+                    return { error: `Image API ${r.status}: ${text.slice(0, 200)}` };
+                  }
+                  const json = (await r.json()) as {
+                    data?: Array<{ b64_json?: string }>;
+                  };
+                  const b64 = json.data?.[0]?.b64_json;
+                  if (!b64) return { error: "No image returned." };
+                  return { url: `data:image/png;base64,${b64}` };
+                } catch (e) {
+                  return { error: e instanceof Error ? e.message : "Image generation failed." };
+                }
               },
             }),
           };
