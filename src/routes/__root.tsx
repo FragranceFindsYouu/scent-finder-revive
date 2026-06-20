@@ -70,7 +70,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Fragrance Finds You — Genuine designer & niche fragrance decants" },
       { name: "description", content: "Independent fragrance decants and samples by Joan. Try designer and niche scents in 5ml & 10ml — from Tom Ford and Louis Vuitton to D'annam and Parfums de Marly." },
       { property: "og:title", content: "Fragrance Finds You — Genuine designer & niche fragrance decants" },
