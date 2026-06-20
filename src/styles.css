@@ -179,3 +179,14 @@
   .spray-fade, .spray-wash, .spray-bottle-wrap, .spray-particle { animation: none !important; }
   .spray-fade { display: none; }
 }
+
+/* iOS / Android safe-area support for the Capacitor native shell.
+   Harmless in regular browsers — env() returns 0 when no inset exists. */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
