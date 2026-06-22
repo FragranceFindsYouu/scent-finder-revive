@@ -14,10 +14,9 @@ const config: CapacitorConfig = {
   appName: "Fragrance Finds You",
   webDir: "dist",
   server: {
-    // Stable Lovable URL for this project — does not change on rename.
-    // Replace with your custom domain (e.g. https://fragrancefindsyou.com)
-    // after you connect one in Project Settings → Domains.
-    url: "https://project--8aa4e164-e50e-4bbd-89e8-bcd3fc010160.lovable.app",
+    // Custom domain — portable across hosts. If you ever move hosting,
+    // just repoint DNS at the new provider; the app keeps working.
+    url: "https://fragrancefindsyou.com",
     cleartext: false,
     androidScheme: "https",
   },
