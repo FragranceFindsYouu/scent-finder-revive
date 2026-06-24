@@ -1,4 +1,3 @@
-import "@tanstack/start-client-core";
 import { createFileRoute } from "@tanstack/react-router";
 import { type StripeEnv, createStripeClient, verifyWebhook } from "@/lib/stripe.server";
 
