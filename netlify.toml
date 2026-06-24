@@ -1,0 +1,10 @@
+[build]
+  command = "bun run build"
+  publish = ".output/public"
+
+[functions]
+  directory = ".output/server"
+
+# TanStack Start (Nitro) ships its own server entry; Netlify auto-detects
+# the .output/server handler when the Nitro Netlify preset is used.
+# If migrating to Netlify, also set NITRO_PRESET=netlify in env vars.
