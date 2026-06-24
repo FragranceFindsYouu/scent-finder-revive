@@ -38,6 +38,80 @@ export type Database = {
         }
         Relationships: []
       }
+      giveaway_entries: {
+        Row: {
+          created_at: string
+          email: string
+          giveaway_id: string
+          id: string
+          name: string
+          note: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          giveaway_id: string
+          id?: string
+          name: string
+          note?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          giveaway_id?: string
+          id?: string
+          name?: string
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveaway_entries_giveaway_id_fkey"
+            columns: ["giveaway_id"]
+            isOneToOne: false
+            referencedRelation: "giveaways"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveaways: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          prize: string
+          status: string
+          title: string
+          updated_at: string
+          winner_entry_id: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          prize?: string
+          status?: string
+          title: string
+          updated_at?: string
+          winner_entry_id?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          prize?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          winner_entry_id?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
