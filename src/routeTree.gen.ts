@@ -18,6 +18,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
+import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
+import { Route as CollectionsSplatRouteImport } from './routes/collections.$'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
@@ -68,6 +70,16 @@ const ProductsHandleRoute = ProductsHandleRouteImport.update({
   path: '/products/$handle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsSplatRoute = CollectionsSplatRouteImport.update({
+  id: '/collections/$',
+  path: '/collections/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
@@ -107,6 +119,8 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/collections/$': typeof CollectionsSplatRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -122,6 +136,8 @@ export interface FileRoutesByTo {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/collections/$': typeof CollectionsSplatRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -139,6 +155,8 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/collections/$': typeof CollectionsSplatRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -156,6 +174,8 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/collections/$'
+    | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/admin/orders'
@@ -171,6 +191,8 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/collections/$'
+    | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/admin/orders'
@@ -187,6 +209,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/collections/$'
+    | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/_authenticated/admin/orders'
@@ -202,6 +226,8 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
   ApiChatRoute: typeof ApiChatRoute
+  CollectionsSplatRoute: typeof CollectionsSplatRoute
+  PagesSlugRoute: typeof PagesSlugRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
   ReviewTokenRoute: typeof ReviewTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -270,6 +296,20 @@ declare module '@tanstack/react-router' {
       path: '/products/$handle'
       fullPath: '/products/$handle'
       preLoaderRoute: typeof ProductsHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages/$slug': {
+      id: '/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/$': {
+      id: '/collections/$'
+      path: '/collections/$'
+      fullPath: '/collections/$'
+      preLoaderRoute: typeof CollectionsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
@@ -344,6 +384,8 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
   ApiChatRoute: ApiChatRoute,
+  CollectionsSplatRoute: CollectionsSplatRoute,
+  PagesSlugRoute: PagesSlugRoute,
   ProductsHandleRoute: ProductsHandleRoute,
   ReviewTokenRoute: ReviewTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

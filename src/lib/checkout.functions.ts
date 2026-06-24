@@ -91,7 +91,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        payment_method_types: ["card", "cashapp", "affirm", "klarna"],
+        // Don't restrict payment_method_types — let Stripe auto-show
+        // whichever methods are activated on the account (card, Apple Pay,
+        // Google Pay, Cash App Pay, Affirm, Klarna, PayPal, etc.).
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
