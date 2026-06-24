@@ -24,6 +24,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
+import { Route as AuthenticatedAdminGiveawaysRouteImport } from './routes/_authenticated/admin.giveaways'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const ContactRoute = ContactRouteImport.update({
@@ -102,6 +103,12 @@ const AuthenticatedAdminOrdersRoute =
     path: '/admin/orders',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminGiveawaysRoute =
+  AuthenticatedAdminGiveawaysRouteImport.update({
+    id: '/admin/giveaways',
+    path: '/admin/giveaways',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/_authenticated/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/admin/giveaways'
     | '/admin/orders'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/admin/giveaways'
     | '/admin/orders'
     | '/api/public/payments/webhook'
   id:
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/_authenticated/admin/giveaways'
     | '/_authenticated/admin/orders'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/giveaways': {
+      id: '/_authenticated/admin/giveaways'
+      path: '/admin/giveaways'
+      fullPath: '/admin/giveaways'
+      preLoaderRoute: typeof AuthenticatedAdminGiveawaysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -352,11 +372,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminGiveawaysRoute: typeof AuthenticatedAdminGiveawaysRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminGiveawaysRoute: AuthenticatedAdminGiveawaysRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
 }
 
