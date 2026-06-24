@@ -1,3 +1,4 @@
+import "@tanstack/start-client-core";
 import { createFileRoute } from "@tanstack/react-router";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createClient } from "@supabase/supabase-js";
