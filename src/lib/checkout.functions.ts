@@ -46,17 +46,18 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<CheckoutSessionResult> => {
     try {
-      // Pre-flight: verify stock for every variant before opening Stripe
+      const supabasePublic = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_PUBLISHABLE_KEY!,
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      );
+
+      // Pre-flight: verify stock
       const variantIds = data.items
         .map((i) => i.variantId)
         .filter((v): v is string => typeof v === "string" && v.length > 0);
 
       if (variantIds.length > 0) {
-        const supabasePublic = createClient(
-          process.env.SUPABASE_URL!,
-          process.env.SUPABASE_PUBLISHABLE_KEY!,
-          { auth: { persistSession: false, autoRefreshToken: false } },
-        );
         const { data: variants, error: vErr } = await supabasePublic
           .from("product_variants")
           .select("id, stock_count, size")
@@ -85,15 +86,51 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         }
       }
 
+      // Load shipping settings
+      const { data: ship } = await supabasePublic
+        .from("shipping_settings")
+        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days")
+        .eq("id", 1)
+        .maybeSingle();
+
+      const subtotalCents = data.items.reduce(
+        (s, i) => s + i.unitAmount * i.quantity,
+        0,
+      );
+
+      const flatRate = ship?.flat_rate_cents ?? 500;
+      const freeThreshold = ship?.free_shipping_threshold_cents ?? 5000;
+      const shippingLabel = ship?.label ?? "Standard Shipping";
+      const minDays = ship?.delivery_min_days ?? 3;
+      const maxDays = ship?.delivery_max_days ?? 7;
+      const qualifiesFree = subtotalCents >= freeThreshold;
+
+      const shippingOptions = [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount" as const,
+            fixed_amount: {
+              amount: qualifiesFree ? 0 : flatRate,
+              currency: "usd",
+            },
+            display_name: qualifiesFree ? "Free Shipping" : shippingLabel,
+            delivery_estimate: {
+              minimum: { unit: "business_day" as const, value: minDays },
+              maximum: { unit: "business_day" as const, value: maxDays },
+            },
+          },
+        },
+      ];
+
       const stripe = createStripeClient(data.environment);
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        // Don't restrict payment_method_types — let Stripe auto-show
-        // whichever methods are activated on the account (card, Apple Pay,
-        // Google Pay, Cash App Pay, Affirm, Klarna, PayPal, etc.).
+        // Card covers Apple Pay & Google Pay automatically. Link is excluded
+        // by listing methods explicitly (omit "link").
+        payment_method_types: ["card", "cashapp", "affirm", "klarna", "paypal"],
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
@@ -107,6 +144,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
             },
           },
         })),
+        shipping_options: shippingOptions,
         billing_address_collection: "auto",
         shipping_address_collection: {
           allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "DK", "IE"],
