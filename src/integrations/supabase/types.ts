@@ -213,33 +213,45 @@ export type Database = {
       product_variants: {
         Row: {
           created_at: string
+          height_cm: number | null
           id: string
+          length_cm: number | null
           price: number
           product_id: string
           size: string
           sort_order: number
           stock_count: number
           updated_at: string
+          weight_grams: number | null
+          width_cm: number | null
         }
         Insert: {
           created_at?: string
+          height_cm?: number | null
           id?: string
+          length_cm?: number | null
           price?: number
           product_id: string
           size: string
           sort_order?: number
           stock_count?: number
           updated_at?: string
+          weight_grams?: number | null
+          width_cm?: number | null
         }
         Update: {
           created_at?: string
+          height_cm?: number | null
           id?: string
+          length_cm?: number | null
           price?: number
           product_id?: string
           size?: string
           sort_order?: number
           stock_count?: number
           updated_at?: string
+          weight_grams?: number | null
+          width_cm?: number | null
         }
         Relationships: [
           {
@@ -336,6 +348,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shipping_settings: {
+        Row: {
+          delivery_max_days: number
+          delivery_min_days: number
+          flat_rate_cents: number
+          free_shipping_threshold_cents: number
+          id: number
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          delivery_max_days?: number
+          delivery_min_days?: number
+          flat_rate_cents?: number
+          free_shipping_threshold_cents?: number
+          id?: number
+          label?: string
+          updated_at?: string
+        }
+        Update: {
+          delivery_max_days?: number
+          delivery_min_days?: number
+          flat_rate_cents?: number
+          free_shipping_threshold_cents?: number
+          id?: number
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {

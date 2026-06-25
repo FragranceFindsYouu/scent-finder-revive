@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin-dashboard
+Disallow: /admin/
+Disallow: /auth
+Disallow: /checkout
+Disallow: /review/
+Disallow: /_authenticated/
+
+Sitemap: https://fragrancefindsyou.com/sitemap.xml

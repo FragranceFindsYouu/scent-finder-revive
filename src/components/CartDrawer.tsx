@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart";
 import { EditableText } from "@/lib/siteSettings";
+import { ShippingNotice } from "@/components/ShippingNotice";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, setQuantity, subtotal, count } = useCart();
@@ -109,9 +110,7 @@ export function CartDrawer() {
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
-              <EditableText id="cart.shippingNote" as="p" className="text-[11px] text-muted-foreground">
-                Shipping and taxes calculated at checkout.
-              </EditableText>
+              <ShippingNotice subtotalCents={Math.round(subtotal * 100)} compact />
               <Link
                 to="/checkout"
                 onClick={closeCart}

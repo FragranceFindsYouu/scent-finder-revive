@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { ShippingNotice } from "@/components/ShippingNotice";
 import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/checkout")({
@@ -45,9 +46,12 @@ function CheckoutPage() {
       <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
         <EditableText id="checkout.title" as="h1" className="font-display text-4xl md:text-5xl text-primary">Checkout</EditableText>
         <EditableText id="checkout.subtitle" as="p" className="mt-2 text-sm text-muted-foreground">
-          Secure payment by card, Apple Pay, Cash App Pay, Affirm, or Klarna.
+          Secure payment by card, Apple Pay, Cash App Pay, Affirm, Klarna, or PayPal.
         </EditableText>
 
+        <div className="mt-6">
+          <ShippingNotice subtotalCents={Math.round(subtotal * 100)} />
+        </div>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
           <div className="rounded-xl border border-border bg-card p-2 md:p-4">
