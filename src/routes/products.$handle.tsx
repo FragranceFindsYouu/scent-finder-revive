@@ -8,15 +8,60 @@ import { EditableText } from "@/lib/siteSettings";
 import { ProductReviews } from "@/components/ProductReviews";
 
 export const Route = createFileRoute("/products/$handle")({
-  loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(productsQueryOptions);
+  loader: async ({ context, params }) => {
+    const products = await context.queryClient.ensureQueryData(productsQueryOptions);
+    return { product: products.find((p) => p.handle === params.handle) ?? null };
   },
-  head: ({ params }) => ({
-    meta: [
-      { title: `${prettyHandle(params.handle)} — Fragrance Finds You` },
-      { name: "description", content: `Decants of ${prettyHandle(params.handle)} from $5.` },
-    ],
-  }),
+  head: ({ params, loaderData }) => {
+    const p = loaderData?.product;
+    const title = p?.title ?? prettyHandle(params.handle);
+    const desc = p?.description
+      ? p.description.slice(0, 155)
+      : `Decants of ${title} from $${(p?.price ?? 5).toFixed(2)}. Authentic fragrance samples shipped from Fragrance Finds You.`;
+    const image = p?.image_url || p?.image;
+    const url = `https://fragrancefindsyou.com/products/${params.handle}`;
+    const scripts = p
+      ? [
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: p.title,
+              description: p.description || desc,
+              image: image ? [image] : undefined,
+              brand: { "@type": "Brand", name: "Fragrance Finds You" },
+              category: p.category || "Fragrance",
+              offers: {
+                "@type": "AggregateOffer",
+                priceCurrency: "USD",
+                lowPrice: p.price,
+                highPrice: Math.max(p.price, ...p.variants.map((v) => v.price)),
+                offerCount: p.variants.length || 1,
+                availability: p.available
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+                url,
+              },
+            }),
+          },
+        ]
+      : [];
+    return {
+      meta: [
+        { title: `${title} — Decants & Samples | Fragrance Finds You` },
+        { name: "description", content: desc },
+        { property: "og:title", content: `${title} — Fragrance Finds You` },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        ...(image ? [{ property: "og:image" as const, content: image }] : []),
+        ...(image ? [{ name: "twitter:image" as const, content: image }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts,
+    };
+  },
   component: ProductDetail,
   errorComponent: ({ reset }) => {
     const router = useRouter();
