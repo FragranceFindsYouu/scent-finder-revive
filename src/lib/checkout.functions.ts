@@ -178,12 +178,12 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           : taxMode === "calculate"
             ? {
                 ...baseSession,
-                payment_method_types: ["card", "cashapp", "affirm", "klarna"] as Array<"card">,
+                payment_method_types: ["card", "cashapp", "klarna"] as Array<"card">,
                 automatic_tax: { enabled: true },
               }
             : {
                 ...baseSession,
-                payment_method_types: ["card", "cashapp", "affirm", "klarna"] as Array<"card">,
+                payment_method_types: ["card", "cashapp", "klarna"] as Array<"card">,
               };
 
       const session = await stripe.checkout.sessions.create(
