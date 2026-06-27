@@ -128,9 +128,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        // Card covers Apple Pay & Google Pay automatically. Link is excluded
-        // by listing methods explicitly (omit "link").
-        payment_method_types: ["card", "cashapp", "affirm", "klarna", "paypal"],
+        // Card covers Apple Pay & Google Pay automatically. PayPal must be
+        // activated in the Stripe Dashboard before re-adding it here.
+        payment_method_types: ["card", "cashapp", "affirm", "klarna"],
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
