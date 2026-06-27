@@ -126,13 +126,10 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
 
       const stripe = createStripeClient(data.environment);
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        ui_mode: "embedded_page",
+      const baseSession = {
+        mode: "payment" as const,
+        ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
-        // Card covers Apple Pay & Google Pay automatically. PayPal must be
-        // activated in the Stripe Dashboard before re-adding it here.
-        payment_method_types: ["card", "cashapp", "affirm", "klarna"],
         line_items: data.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
@@ -147,9 +144,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           },
         })),
         shipping_options: shippingOptions,
-        billing_address_collection: "auto",
+        billing_address_collection: "auto" as const,
         shipping_address_collection: {
-          allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "DK", "IE"],
+          allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "DK", "IE"] as Array<"US">,
         },
         phone_number_collection: { enabled: true },
         ...(data.customerEmail && { customer_email: data.customerEmail }),
@@ -166,8 +163,32 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
               q: i.quantity,
             })),
           ).slice(0, 500),
+          tax_mode: taxMode,
         },
-      });
+      };
+
+      // Tax handling:
+      // - "managed":  Stripe handles tax calc + collection + filing/remittance (+3.5%/txn).
+      //               Conflicts with payment_method_types — must omit.
+      // - "calculate": Stripe calculates & collects tax only (+0.5%/txn).
+      // - "none":      No tax automation.
+      const sessionParams =
+        taxMode === "managed"
+          ? { ...baseSession, managed_payments: { enabled: true } }
+          : taxMode === "calculate"
+            ? {
+                ...baseSession,
+                payment_method_types: ["card", "cashapp", "affirm", "klarna"] as Array<"card">,
+                automatic_tax: { enabled: true },
+              }
+            : {
+                ...baseSession,
+                payment_method_types: ["card", "cashapp", "affirm", "klarna"] as Array<"card">,
+              };
+
+      const session = await stripe.checkout.sessions.create(
+        sessionParams as unknown as Parameters<typeof stripe.checkout.sessions.create>[0],
+      );
 
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
