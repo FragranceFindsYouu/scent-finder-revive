@@ -46,7 +46,7 @@ function CheckoutPage() {
       <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
         <EditableText id="checkout.title" as="h1" className="font-display text-4xl md:text-5xl text-primary">Checkout</EditableText>
         <EditableText id="checkout.subtitle" as="p" className="mt-2 text-sm text-muted-foreground">
-          Secure payment by card, Apple Pay, Cash App Pay, Affirm, Klarna, or PayPal.
+          Secure payment by card, Apple Pay, Cash App Pay, or Klarna.
         </EditableText>
 
         <div className="mt-6">
