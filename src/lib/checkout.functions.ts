@@ -86,12 +86,14 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         }
       }
 
-      // Load shipping settings
+      // Load shipping + tax settings
       const { data: ship } = await supabasePublic
         .from("shipping_settings")
-        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days")
+        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode")
         .eq("id", 1)
         .maybeSingle();
+
+      const taxMode = (ship as { tax_mode?: string } | null)?.tax_mode ?? "none";
 
       const subtotalCents = data.items.reduce(
         (s, i) => s + i.unitAmount * i.quantity,
