@@ -357,6 +357,7 @@ export type Database = {
           free_shipping_threshold_cents: number
           id: number
           label: string
+          tax_mode: string
           updated_at: string
         }
         Insert: {
@@ -366,6 +367,7 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           label?: string
+          tax_mode?: string
           updated_at?: string
         }
         Update: {
@@ -375,6 +377,7 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           label?: string
+          tax_mode?: string
           updated_at?: string
         }
         Relationships: []
