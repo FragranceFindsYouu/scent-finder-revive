@@ -466,6 +466,12 @@ function AdminDashboard() {
             Tax
           </Link>
           <Link
+            to="/admin/promotions"
+            className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
+          >
+            Promotions
+          </Link>
+          <Link
             to="/admin/reviews"
             className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
           >
