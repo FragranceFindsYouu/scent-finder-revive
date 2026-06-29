@@ -83,7 +83,7 @@ function AdminTax() {
   async function pick(mode: TaxMode) {
     if (mode === current) return;
     setSaving(mode);
-    const patch: Record<string, unknown> = { tax_mode: mode };
+    const patch: { tax_mode: string; manual_tax_percent?: number } = { tax_mode: mode };
     if (mode === "manual" && settings?.manual_tax_percent === 0) patch.manual_tax_percent = 7;
 
     const { error } = await supabase
