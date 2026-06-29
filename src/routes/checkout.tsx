@@ -117,7 +117,6 @@ function CheckoutPage() {
                   <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>
                   <span>${(estimatedTotalCents / 100).toFixed(2)}</span>
                 </div>
-              </div>
               )}
             </div>
           </aside>
