@@ -189,9 +189,6 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
               ]
             : []),
         ],
-            },
-          },
-        })),
         shipping_options: shippingOptions,
         billing_address_collection: "auto" as const,
         shipping_address_collection: {
