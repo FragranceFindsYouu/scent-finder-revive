@@ -153,6 +153,7 @@ function ProductDetail() {
         price,
         image,
         max_stock: stock,
+        tax_percent: product.tax_percent,
       },
       quantity
     );

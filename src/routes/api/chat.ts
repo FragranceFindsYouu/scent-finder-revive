@@ -20,10 +20,11 @@ const CUSTOMER_SYSTEM = `You are the friendly customer concierge for Fragrance F
 const ADMIN_SYSTEM = `You are the personal AI assistant for the owner of Fragrance Finds You (FFY). You have three roles:
 
 1. STORE OPERATOR — Full operational control of the FFY store via tools:
-   - Products & variants: list/create/update/delete products, add/update/delete sizes, adjust stock and prices.
+   - Products & variants: list/create/update/delete products, add/update/delete sizes, adjust stock, prices, and product tax rates.
    - Orders: list orders, change status (cancel, refund, mark oversold).
    - Reviews: list and delete customer reviews.
    - Site content: list and edit on-page text/styles via site_settings.
+   - Tax & promotions: set manual/global/product tax rates and create/edit promotional site banners.
    - Customer ops: read contact messages, newsletter subscribers, store stats.
    When the owner gives a store command, EXECUTE it by calling tools. For destructive actions (delete, refund, cancel), state what you're about to do, then proceed. Report results with markdown lists/tables.
 
@@ -128,7 +129,7 @@ export const Route = createFileRoute("/api/chat")({
                 let q = supabaseAdmin
                   .from("products")
                   .select(
-                    "id, title, handle, category, price, image_url, description, variants:product_variants(id, size, price, stock_count)",
+                    "id, title, handle, category, price, tax_percent, image_url, description, variants:product_variants(id, size, price, stock_count)",
                   )
                   .order("sort_order", { ascending: true });
                 if (search) q = q.ilike("title", `%${search}%`);
@@ -197,13 +198,14 @@ export const Route = createFileRoute("/api/chat")({
 
             update_product: tool({
               description:
-                "Update product fields (title, description, category, image_url). Pass only fields you want to change.",
+                "Update product fields (title, description, category, image_url, tax_percent). Pass only fields you want to change. tax_percent is a manual tax override; use null to fall back to global tax.",
               inputSchema: z.object({
                 product_id: z.string().uuid(),
                 title: z.string().optional(),
                 description: z.string().optional(),
                 category: z.string().optional(),
                 image_url: z.string().optional(),
+                tax_percent: z.number().min(0).max(25).nullable().optional(),
               }),
               execute: async ({ product_id, ...patch }) => {
                 const update: Record<string, unknown> = {};
@@ -408,6 +410,139 @@ export const Route = createFileRoute("/api/chat")({
                   .upsert(row as never, { onConflict: "element_id" });
                 if (error) return { error: error.message };
                 return { ok: true };
+              },
+            }),
+
+            get_tax_settings: tool({
+              description:
+                "Show the current tax mode, global manual tax percentage, and any products with product-specific tax overrides.",
+              inputSchema: z.object({}),
+              execute: async () => {
+                const [{ data: settings, error: settingsError }, { data: products, error: productsError }] =
+                  await Promise.all([
+                    supabaseAdmin
+                      .from("shipping_settings")
+                      .select("tax_mode, manual_tax_percent")
+                      .eq("id", 1)
+                      .maybeSingle(),
+                    supabaseAdmin
+                      .from("products")
+                      .select("id, title, handle, tax_percent")
+                      .not("tax_percent", "is", null)
+                      .order("title"),
+                  ]);
+                if (settingsError) return { error: settingsError.message };
+                if (productsError) return { error: productsError.message };
+                return { settings, product_overrides: products };
+              },
+            }),
+
+            set_manual_tax: tool({
+              description:
+                "Enable manual tax and set the global tax percentage that appears as a visible Sales tax line in checkout.",
+              inputSchema: z.object({
+                percent: z.number().min(0).max(25).describe("Global tax percentage, for example 8.875"),
+              }),
+              execute: async ({ percent }) => {
+                const { error } = await supabaseAdmin
+                  .from("shipping_settings")
+                  .update({ tax_mode: "manual", manual_tax_percent: percent })
+                  .eq("id", 1);
+                if (error) return { error: error.message };
+                return { ok: true, message: `Manual tax enabled at ${percent}%.` };
+              },
+            }),
+
+            set_product_tax: tool({
+              description:
+                "Set or clear a product-specific manual tax percentage. Use product_id from list_products. Pass null to clear and use global tax.",
+              inputSchema: z.object({
+                product_id: z.string().uuid(),
+                percent: z.number().min(0).max(25).nullable(),
+              }),
+              execute: async ({ product_id, percent }) => {
+                const { error } = await supabaseAdmin
+                  .from("products")
+                  .update({ tax_percent: percent })
+                  .eq("id", product_id);
+                if (error) return { error: error.message };
+                return {
+                  ok: true,
+                  message: percent == null ? "Product now uses global manual tax." : `Product tax set to ${percent}%.`,
+                };
+              },
+            }),
+
+            set_tax_mode: tool({
+              description:
+                "Switch tax mode: none, manual, calculate (Stripe Tax), or managed (Stripe files/remits if approved).",
+              inputSchema: z.object({
+                mode: z.enum(["none", "manual", "calculate", "managed"]),
+              }),
+              execute: async ({ mode }) => {
+                const patch: { tax_mode: string; manual_tax_percent?: number } = { tax_mode: mode };
+                if (mode === "manual") patch.manual_tax_percent = 7;
+                const { error } = await supabaseAdmin
+                  .from("shipping_settings")
+                  .update(patch)
+                  .eq("id", 1);
+                if (error) return { error: error.message };
+                return { ok: true, mode };
+              },
+            }),
+
+            list_promotion_banners: tool({
+              description: "List promotional site banners with text, photo URL, active status, and typography/color styles.",
+              inputSchema: z.object({
+                include_inactive: z.boolean().optional().default(true),
+              }),
+              execute: async ({ include_inactive }) => {
+                let q = supabaseAdmin
+                  .from("promotion_banners")
+                  .select("id, title, message, cta_label, cta_href, image_url, is_active, sort_order, styles, starts_at, ends_at")
+                  .order("sort_order", { ascending: true });
+                if (!include_inactive) q = q.eq("is_active", true);
+                const { data, error } = await q;
+                if (error) return { error: error.message };
+                return { banners: data };
+              },
+            }),
+
+            upsert_promotion_banner: tool({
+              description:
+                "Create or edit a promotional website banner. Use for sales, announcements, photos, CTA buttons, fonts, and colors. If banner_id is omitted, creates a new banner.",
+              inputSchema: z.object({
+                banner_id: z.string().uuid().optional(),
+                title: z.string().optional().default(""),
+                message: z.string().optional().default(""),
+                cta_label: z.string().optional().default("Shop now"),
+                cta_href: z.string().optional().default("/catalog"),
+                image_url: z.string().optional().default(""),
+                is_active: z.boolean().optional().default(true),
+                sort_order: z.number().int().optional().default(0),
+                styles: z
+                  .object({
+                    fontFamily: z.string().optional(),
+                    fontSize: z.number().min(10).max(60).optional(),
+                    color: z.string().optional(),
+                    backgroundColor: z.string().optional(),
+                    textAlign: z.enum(["left", "center", "right"]).optional(),
+                  })
+                  .optional()
+                  .default({}),
+              }),
+              execute: async ({ banner_id, ...payload }) => {
+                const row = {
+                  ...(banner_id ? { id: banner_id } : {}),
+                  ...payload,
+                };
+                const { data, error } = await supabaseAdmin
+                  .from("promotion_banners")
+                  .upsert(row as never, { onConflict: "id" })
+                  .select("id, title, is_active")
+                  .single();
+                if (error) return { error: error.message };
+                return { ok: true, banner: data };
               },
             }),
 

@@ -24,6 +24,7 @@ export function StripeCartCheckout({
           returnUrl,
           customerEmail,
           items: items.map((i) => ({
+            productId: i.product_id,
             variantId: i.variant_id,
             title: i.title,
             size: i.size,

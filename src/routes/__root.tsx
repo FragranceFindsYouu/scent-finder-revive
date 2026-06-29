@@ -22,6 +22,7 @@ import { SiteSettingsProvider } from "../lib/siteSettings";
 import { LayoutCustomizer, ApplyBgTheme } from "../components/LayoutCustomizer";
 import { SprayIntro } from "../components/SprayIntro";
 import { CustomerChatBubble } from "../components/CustomerChatBubble";
+import { PromotionBanner } from "../components/PromotionBanner";
 
 function NotFoundComponent() {
   return (
@@ -151,6 +152,7 @@ function RootComponent() {
             <SprayIntro />
             <div className="min-h-screen flex flex-col">
               <Header />
+              <PromotionBanner />
               <main className="flex-1">
                 <Outlet />
               </main>

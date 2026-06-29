@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminTaxRouteImport } from './routes/_authenticated/admin.tax'
 import { Route as AuthenticatedAdminShippingRouteImport } from './routes/_authenticated/admin.shipping'
 import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
+import { Route as AuthenticatedAdminPromotionsRouteImport } from './routes/_authenticated/admin.promotions'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminGiveawaysRouteImport } from './routes/_authenticated/admin.giveaways'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -123,6 +124,12 @@ const AuthenticatedAdminReviewsRoute =
     path: '/admin/reviews',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPromotionsRoute =
+  AuthenticatedAdminPromotionsRouteImport.update({
+    id: '/admin/promotions',
+    path: '/admin/promotions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/admin/orders',
@@ -159,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/review/$token': typeof ReviewTokenRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/promotions': typeof AuthenticatedAdminPromotionsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/shipping': typeof AuthenticatedAdminShippingRoute
   '/admin/tax': typeof AuthenticatedAdminTaxRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByTo {
   '/review/$token': typeof ReviewTokenRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/promotions': typeof AuthenticatedAdminPromotionsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/shipping': typeof AuthenticatedAdminShippingRoute
   '/admin/tax': typeof AuthenticatedAdminTaxRoute
@@ -205,6 +214,7 @@ export interface FileRoutesById {
   '/review/$token': typeof ReviewTokenRoute
   '/_authenticated/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/promotions': typeof AuthenticatedAdminPromotionsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/shipping': typeof AuthenticatedAdminShippingRoute
   '/_authenticated/admin/tax': typeof AuthenticatedAdminTaxRoute
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/review/$token'
     | '/admin/giveaways'
     | '/admin/orders'
+    | '/admin/promotions'
     | '/admin/reviews'
     | '/admin/shipping'
     | '/admin/tax'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/review/$token'
     | '/admin/giveaways'
     | '/admin/orders'
+    | '/admin/promotions'
     | '/admin/reviews'
     | '/admin/shipping'
     | '/admin/tax'
@@ -274,6 +286,7 @@ export interface FileRouteTypes {
     | '/review/$token'
     | '/_authenticated/admin/giveaways'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/promotions'
     | '/_authenticated/admin/reviews'
     | '/_authenticated/admin/shipping'
     | '/_authenticated/admin/tax'
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/promotions': {
+      id: '/_authenticated/admin/promotions'
+      path: '/admin/promotions'
+      fullPath: '/admin/promotions'
+      preLoaderRoute: typeof AuthenticatedAdminPromotionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/orders': {
       id: '/_authenticated/admin/orders'
       path: '/admin/orders'
@@ -453,6 +473,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminGiveawaysRoute: typeof AuthenticatedAdminGiveawaysRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPromotionsRoute: typeof AuthenticatedAdminPromotionsRoute
   AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminShippingRoute: typeof AuthenticatedAdminShippingRoute
   AuthenticatedAdminTaxRoute: typeof AuthenticatedAdminTaxRoute
@@ -462,6 +483,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminGiveawaysRoute: AuthenticatedAdminGiveawaysRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPromotionsRoute: AuthenticatedAdminPromotionsRoute,
   AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminShippingRoute: AuthenticatedAdminShippingRoute,
   AuthenticatedAdminTaxRoute: AuthenticatedAdminTaxRoute,
