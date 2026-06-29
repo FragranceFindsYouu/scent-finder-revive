@@ -276,6 +276,7 @@ export type Database = {
           inventory_count: number
           price: number
           sort_order: number
+          tax_percent: number | null
           title: string
           updated_at: string
         }
@@ -291,6 +292,7 @@ export type Database = {
           inventory_count?: number
           price?: number
           sort_order?: number
+          tax_percent?: number | null
           title: string
           updated_at?: string
         }
@@ -306,6 +308,55 @@ export type Database = {
           inventory_count?: number
           price?: number
           sort_order?: number
+          tax_percent?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promotion_banners: {
+        Row: {
+          created_at: string
+          cta_href: string
+          cta_label: string
+          ends_at: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          message: string
+          sort_order: number
+          starts_at: string | null
+          styles: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_href?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          message?: string
+          sort_order?: number
+          starts_at?: string | null
+          styles?: Json
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_href?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          message?: string
+          sort_order?: number
+          starts_at?: string | null
+          styles?: Json
           title?: string
           updated_at?: string
         }
@@ -357,6 +408,7 @@ export type Database = {
           free_shipping_threshold_cents: number
           id: number
           label: string
+          manual_tax_percent: number
           tax_mode: string
           updated_at: string
         }
@@ -367,6 +419,7 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           label?: string
+          manual_tax_percent?: number
           tax_mode?: string
           updated_at?: string
         }
@@ -377,6 +430,7 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           label?: string
+          manual_tax_percent?: number
           tax_mode?: string
           updated_at?: string
         }
