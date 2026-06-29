@@ -4,6 +4,8 @@ import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ShippingNotice } from "@/components/ShippingNotice";
 import { EditableText } from "@/lib/siteSettings";
+import { useQuery } from "@tanstack/react-query";
+import { calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { items, subtotal } = useCart();
+  const { data: shippingSettings } = useQuery(shippingSettingsQueryOptions);
 
   if (items.length === 0) {
     return (
@@ -39,6 +42,18 @@ function CheckoutPage() {
     typeof window !== "undefined"
       ? `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`
       : "/checkout/return?session_id={CHECKOUT_SESSION_ID}";
+
+  const subtotalCents = Math.round(subtotal * 100);
+  const manualTaxCents =
+    shippingSettings?.tax_mode === "manual"
+      ? calculateManualTaxCents(items, shippingSettings.manual_tax_percent)
+      : 0;
+  const shippingCents = shippingSettings
+    ? subtotalCents >= shippingSettings.free_shipping_threshold_cents
+      ? 0
+      : shippingSettings.flat_rate_cents
+    : 0;
+  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents;
 
   return (
     <>
@@ -86,9 +101,24 @@ function CheckoutPage() {
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <EditableText id="checkout.summary.taxLabel">Tax &amp; shipping</EditableText>
-                <EditableText id="checkout.summary.taxValue">Calculated at checkout</EditableText>
+                <EditableText id="checkout.summary.shippingLabel">Shipping</EditableText>
+                <span>{shippingSettings ? `$${(shippingCents / 100).toFixed(2)}` : "Calculated at checkout"}</span>
               </div>
+              <div className="flex justify-between text-muted-foreground">
+                <EditableText id="checkout.summary.taxLabel">Tax</EditableText>
+                <span>
+                  {shippingSettings?.tax_mode === "manual"
+                    ? `$${(manualTaxCents / 100).toFixed(2)}`
+                    : "Calculated at checkout"}
+                </span>
+              </div>
+              {shippingSettings?.tax_mode === "manual" && (
+                <div className="flex justify-between border-t border-border pt-3 font-medium text-foreground">
+                  <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>
+                  <span>${(estimatedTotalCents / 100).toFixed(2)}</span>
+                </div>
+              </div>
+              )}
             </div>
           </aside>
         </div>

@@ -25,6 +25,7 @@ export type Product = {
   category: string;
   available: boolean;
   sort_order: number;
+  tax_percent: number | null;
   variants: ProductVariant[];
 };
 
@@ -42,7 +43,7 @@ export const productsQueryOptions = queryOptions({
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, title, handle, price, image, image_url, description, inventory_count, category, available, sort_order, product_variants(id, product_id, size, price, stock_count, sort_order)"
+        "id, title, handle, price, image, image_url, description, inventory_count, category, available, sort_order, tax_percent, product_variants(id, product_id, size, price, stock_count, sort_order)"
       )
       .order("sort_order", { ascending: true })
       .order("title", { ascending: true });
@@ -61,6 +62,7 @@ export const productsQueryOptions = queryOptions({
         category: p.category,
         available: p.available,
         sort_order: p.sort_order,
+        tax_percent: p.tax_percent,
         variants,
       };
     });

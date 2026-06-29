@@ -18,6 +18,7 @@ export type CartItem = {
   image: string;
   quantity: number;
   max_stock: number;
+  tax_percent?: number | null;
 };
 
 type CartContextValue = {
