@@ -7,6 +7,7 @@ import {
 } from "@/lib/stripe.server";
 
 type LineItemInput = {
+  productId?: string;
   variantId?: string;
   title: string;
   size: string;
@@ -89,11 +90,14 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       // Load shipping + tax settings
       const { data: ship } = await supabasePublic
         .from("shipping_settings")
-        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode")
+        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode, manual_tax_percent")
         .eq("id", 1)
         .maybeSingle();
 
       const taxMode = (ship as { tax_mode?: string } | null)?.tax_mode ?? "none";
+      const manualTaxPercent = Number(
+        (ship as { manual_tax_percent?: number } | null)?.manual_tax_percent ?? 0,
+      );
 
       const subtotalCents = data.items.reduce(
         (s, i) => s + i.unitAmount * i.quantity,
@@ -106,6 +110,30 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       const minDays = ship?.delivery_min_days ?? 3;
       const maxDays = ship?.delivery_max_days ?? 7;
       const qualifiesFree = subtotalCents >= freeThreshold;
+
+      const productTaxById = new Map<string, number | null>();
+      if (taxMode === "manual") {
+        const productIds = Array.from(
+          new Set(data.items.map((i) => i.productId).filter((id): id is string => !!id)),
+        );
+        if (productIds.length > 0) {
+          const { data: taxProducts } = await supabasePublic
+            .from("products")
+            .select("id, tax_percent")
+            .in("id", productIds);
+          for (const p of taxProducts ?? []) productTaxById.set(p.id, p.tax_percent);
+        }
+      }
+
+      const manualTaxCents =
+        taxMode === "manual"
+          ? data.items.reduce((sum, item) => {
+              const productRate = item.productId ? productTaxById.get(item.productId) : null;
+              const rate = productRate ?? manualTaxPercent;
+              if (!Number.isFinite(rate) || rate <= 0) return sum;
+              return sum + Math.round(item.unitAmount * item.quantity * (rate / 100));
+            }, 0)
+          : 0;
 
       const shippingOptions = [
         {
@@ -126,20 +154,41 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
 
       const stripe = createStripeClient(data.environment);
 
+      const productLineItems = data.items.map((item) => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: "usd",
+          unit_amount: item.unitAmount,
+          product_data: {
+            name: `${item.title} — ${item.size}`,
+            ...(item.image && /^https?:\/\//.test(item.image) && {
+              images: [item.image],
+            }),
+          },
+        },
+      }));
+
       const baseSession = {
         mode: "payment" as const,
         ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
-        line_items: data.items.map((item) => ({
-          quantity: item.quantity,
-          price_data: {
-            currency: "usd",
-            unit_amount: item.unitAmount,
-            product_data: {
-              name: `${item.title} — ${item.size}`,
-              ...(item.image && /^https?:\/\//.test(item.image) && {
-                images: [item.image],
-              }),
+        line_items: [
+          ...productLineItems,
+          ...(manualTaxCents > 0
+            ? [
+                {
+                  quantity: 1,
+                  price_data: {
+                    currency: "usd",
+                    unit_amount: manualTaxCents,
+                    product_data: {
+                      name: "Sales tax",
+                    },
+                  },
+                },
+              ]
+            : []),
+        ],
             },
           },
         })),
@@ -164,12 +213,15 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
             })),
           ).slice(0, 500),
           tax_mode: taxMode,
+          manual_tax_percent: String(manualTaxPercent),
+          manual_tax_cents: String(manualTaxCents),
         },
       };
 
       // Tax handling:
       // - "managed":  Stripe handles tax calc + collection + filing/remittance (+3.5%/txn).
       //               Conflicts with payment_method_types — must omit.
+      // - "manual":    Store-defined tax percent added as a visible checkout line item.
       // - "calculate": Stripe calculates & collects tax only (+0.5%/txn).
       // - "none":      No tax automation.
       const sessionParams =
