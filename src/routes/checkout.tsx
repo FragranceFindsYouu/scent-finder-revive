@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ShippingNotice } from "@/components/ShippingNotice";
 import { EditableText } from "@/lib/siteSettings";
 import { useQuery } from "@tanstack/react-query";
-import { calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
+import { calculateInsuranceCents, calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
