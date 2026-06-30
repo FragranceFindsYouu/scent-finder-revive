@@ -186,6 +186,18 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         line_items: [
           ...productLineItems,
+          ...(insuranceCents > 0
+            ? [
+                {
+                  quantity: 1,
+                  price_data: {
+                    currency: "usd",
+                    unit_amount: insuranceCents,
+                    product_data: { name: insuranceLabel },
+                  },
+                },
+              ]
+            : []),
           ...(manualTaxCents > 0
             ? [
                 {
