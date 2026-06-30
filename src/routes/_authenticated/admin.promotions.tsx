@@ -328,6 +328,17 @@ function AdminPromotions() {
                 className="mt-2 h-12 w-full rounded-xl border border-border bg-background p-1"
               />
             </label>
+            <label className="text-sm text-muted-foreground">
+              Banner placement
+              <select
+                value={form.styles.position ?? "top"}
+                onChange={(e) => patchStyles({ position: e.target.value as "top" | "bottom" })}
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-rose"
+              >
+                <option value="top">Top of page (above header)</option>
+                <option value="bottom">Bottom of page (above footer)</option>
+              </select>
+            </label>
           </div>
 
           <div className="mt-8 rounded-2xl p-5 shadow-sm" style={previewStyle}>
