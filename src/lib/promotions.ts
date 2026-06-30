@@ -8,6 +8,7 @@ export type PromotionBannerStyles = {
   color?: string;
   backgroundColor?: string;
   textAlign?: "left" | "center" | "right";
+  position?: "top" | "bottom";
 };
 
 export type PromotionBanner = {
