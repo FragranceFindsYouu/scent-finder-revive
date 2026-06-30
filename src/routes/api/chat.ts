@@ -521,7 +521,7 @@ export const Route = createFileRoute("/api/chat")({
                 if (label != null) patch.insurance_label = label;
                 const { error } = await supabaseAdmin
                   .from("shipping_settings")
-                  .update(patch)
+                  .update(patch as never)
                   .eq("id", 1);
                 if (error) return { error: error.message };
                 return { ok: true };
