@@ -11,6 +11,24 @@ export type ShippingSettings = {
   delivery_max_days: number;
   tax_mode: TaxMode;
   manual_tax_percent: number;
+  insurance_enabled: boolean;
+  insurance_flat_cents: number;
+  insurance_percent_bps: number;
+  insurance_label: string;
+};
+
+const DEFAULT_SETTINGS: ShippingSettings = {
+  free_shipping_threshold_cents: 5000,
+  flat_rate_cents: 500,
+  label: "Standard Shipping",
+  delivery_min_days: 3,
+  delivery_max_days: 7,
+  tax_mode: "none",
+  manual_tax_percent: 0,
+  insurance_enabled: false,
+  insurance_flat_cents: 199,
+  insurance_percent_bps: 0,
+  insurance_label: "Shipping insurance (lost / damaged protection)",
 };
 
 export function calculateManualTaxCents(
@@ -24,26 +42,23 @@ export function calculateManualTaxCents(
   }, 0);
 }
 
+export function calculateInsuranceCents(subtotalCents: number, settings: ShippingSettings) {
+  if (!settings.insurance_enabled) return 0;
+  const flat = Math.max(0, settings.insurance_flat_cents | 0);
+  const bps = Math.max(0, settings.insurance_percent_bps | 0);
+  return flat + Math.round((subtotalCents * bps) / 10000);
+}
+
 export const shippingSettingsQueryOptions = queryOptions({
   queryKey: ["shipping_settings"],
   queryFn: async (): Promise<ShippingSettings> => {
     const { data, error } = await supabase
       .from("shipping_settings")
-      .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode, manual_tax_percent")
+      .select("*")
       .eq("id", 1)
       .maybeSingle();
     if (error) throw error;
-    return (
-      (data as ShippingSettings | null) ?? {
-        free_shipping_threshold_cents: 5000,
-        flat_rate_cents: 500,
-        label: "Standard Shipping",
-        delivery_min_days: 3,
-        delivery_max_days: 7,
-        tax_mode: "none",
-        manual_tax_percent: 0,
-      }
-    );
+    return { ...DEFAULT_SETTINGS, ...((data as Partial<ShippingSettings> | null) ?? {}) };
   },
   staleTime: 60_000,
 });
