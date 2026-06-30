@@ -236,6 +236,8 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           tax_mode: taxMode,
           manual_tax_percent: String(manualTaxPercent),
           manual_tax_cents: String(manualTaxCents),
+          insurance_cents: String(insuranceCents),
+          insurance_opt_in: data.insuranceOptIn ? "yes" : "no",
         },
       };
 
