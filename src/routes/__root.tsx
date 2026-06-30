@@ -152,10 +152,11 @@ function RootComponent() {
             <SprayIntro />
             <div className="min-h-screen flex flex-col">
               <Header />
-              <PromotionBanner />
+              <PromotionBanner position="top" />
               <main className="flex-1">
                 <Outlet />
               </main>
+              <PromotionBanner position="bottom" />
               <Footer />
             </div>
             <CartDrawer />
