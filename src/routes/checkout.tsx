@@ -55,7 +55,11 @@ function CheckoutPage() {
       ? 0
       : shippingSettings.flat_rate_cents
     : 0;
-  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents;
+  const insuranceCents =
+    shippingSettings && insuranceOptIn
+      ? calculateInsuranceCents(subtotalCents, shippingSettings)
+      : 0;
+  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents + insuranceCents;
 
   return (
     <>
