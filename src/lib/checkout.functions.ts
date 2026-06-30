@@ -91,14 +91,19 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       // Load shipping + tax settings
       const { data: ship } = await supabasePublic
         .from("shipping_settings")
-        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode, manual_tax_percent")
+        .select("*")
         .eq("id", 1)
         .maybeSingle();
 
-      const taxMode = (ship as { tax_mode?: string } | null)?.tax_mode ?? "none";
-      const manualTaxPercent = Number(
-        (ship as { manual_tax_percent?: number } | null)?.manual_tax_percent ?? 0,
-      );
+      const shipAny = (ship ?? {}) as Record<string, unknown>;
+      const taxMode = (shipAny.tax_mode as string | undefined) ?? "none";
+      const manualTaxPercent = Number(shipAny.manual_tax_percent ?? 0);
+      const insuranceEnabled = Boolean(shipAny.insurance_enabled);
+      const insuranceFlatCents = Number(shipAny.insurance_flat_cents ?? 0);
+      const insurancePercentBps = Number(shipAny.insurance_percent_bps ?? 0);
+      const insuranceLabel =
+        (shipAny.insurance_label as string | undefined) ||
+        "Shipping insurance (lost / damaged protection)";
 
       const subtotalCents = data.items.reduce(
         (s, i) => s + i.unitAmount * i.quantity,
