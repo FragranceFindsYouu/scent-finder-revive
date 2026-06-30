@@ -110,12 +110,18 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         0,
       );
 
-      const flatRate = ship?.flat_rate_cents ?? 500;
-      const freeThreshold = ship?.free_shipping_threshold_cents ?? 5000;
-      const shippingLabel = ship?.label ?? "Standard Shipping";
-      const minDays = ship?.delivery_min_days ?? 3;
-      const maxDays = ship?.delivery_max_days ?? 7;
+      const flatRate = Number(shipAny.flat_rate_cents ?? 500);
+      const freeThreshold = Number(shipAny.free_shipping_threshold_cents ?? 5000);
+      const shippingLabel = (shipAny.label as string | undefined) ?? "Standard Shipping";
+      const minDays = Number(shipAny.delivery_min_days ?? 3);
+      const maxDays = Number(shipAny.delivery_max_days ?? 7);
       const qualifiesFree = subtotalCents >= freeThreshold;
+
+      const insuranceCents =
+        insuranceEnabled && data.insuranceOptIn
+          ? Math.max(0, insuranceFlatCents) +
+            Math.round((subtotalCents * Math.max(0, insurancePercentBps)) / 10000)
+          : 0;
 
       const productTaxById = new Map<string, number | null>();
       if (taxMode === "manual") {
