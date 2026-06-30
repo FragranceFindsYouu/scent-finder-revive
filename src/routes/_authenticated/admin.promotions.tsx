@@ -339,6 +339,7 @@ function AdminPromotions() {
                 <option value="bottom">Bottom of page (above footer)</option>
               </select>
             </label>
+          </div>
 
           <div className="mt-8 rounded-2xl p-5 shadow-sm" style={previewStyle}>
             <div className="flex flex-col items-center gap-3 md:flex-row">
