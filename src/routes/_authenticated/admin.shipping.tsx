@@ -27,6 +27,10 @@ function AdminShipping() {
   const [label, setLabel] = useState("");
   const [minD, setMinD] = useState("");
   const [maxD, setMaxD] = useState("");
+  const [insEnabled, setInsEnabled] = useState(false);
+  const [insFlat, setInsFlat] = useState("");
+  const [insPercent, setInsPercent] = useState("");
+  const [insLabel, setInsLabel] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +40,10 @@ function AdminShipping() {
     setLabel(settings.label);
     setMinD(String(settings.delivery_min_days));
     setMaxD(String(settings.delivery_max_days));
+    setInsEnabled(settings.insurance_enabled);
+    setInsFlat((settings.insurance_flat_cents / 100).toFixed(2));
+    setInsPercent((settings.insurance_percent_bps / 100).toFixed(2));
+    setInsLabel(settings.insurance_label);
   }, [settings]);
 
   async function save() {
@@ -43,6 +51,8 @@ function AdminShipping() {
     const flatC = Math.round(parseFloat(flat) * 100);
     const minN = parseInt(minD, 10);
     const maxN = parseInt(maxD, 10);
+    const insFlatC = Math.round(parseFloat(insFlat || "0") * 100);
+    const insBps = Math.round(parseFloat(insPercent || "0") * 100);
     if (!Number.isFinite(freeC) || freeC < 0) return toast.error("Enter a valid free shipping threshold.");
     if (!Number.isFinite(flatC) || flatC < 0) return toast.error("Enter a valid flat rate.");
     if (!Number.isFinite(minN) || minN < 1) return toast.error("Min days must be ≥ 1.");
@@ -56,7 +66,11 @@ function AdminShipping() {
         label: label.trim() || "Standard Shipping",
         delivery_min_days: minN,
         delivery_max_days: maxN,
-      })
+        insurance_enabled: insEnabled,
+        insurance_flat_cents: insFlatC,
+        insurance_percent_bps: insBps,
+        insurance_label: insLabel.trim() || "Shipping insurance (lost / damaged protection)",
+      } as never)
       .eq("id", 1);
     setSaving(false);
     if (error) return toast.error(error.message);
