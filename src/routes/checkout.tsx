@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ShippingNotice } from "@/components/ShippingNotice";
 import { EditableText } from "@/lib/siteSettings";
 import { useQuery } from "@tanstack/react-query";
-import { calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
+import { calculateInsuranceCents, calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { items, subtotal } = useCart();
+  const [insuranceOptIn, setInsuranceOptIn] = useState(false);
   const { data: shippingSettings } = useQuery(shippingSettingsQueryOptions);
 
   if (items.length === 0) {
@@ -53,7 +55,11 @@ function CheckoutPage() {
       ? 0
       : shippingSettings.flat_rate_cents
     : 0;
-  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents;
+  const insuranceCents =
+    shippingSettings && insuranceOptIn
+      ? calculateInsuranceCents(subtotalCents, shippingSettings)
+      : 0;
+  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents + insuranceCents;
 
   return (
     <>
@@ -69,8 +75,28 @@ function CheckoutPage() {
         </div>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
-          <div className="rounded-xl border border-border bg-card p-2 md:p-4">
-            <StripeCartCheckout items={items} returnUrl={returnUrl} />
+          <div className="space-y-4">
+            {shippingSettings?.insurance_enabled && (
+              <label className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 cursor-pointer hover:border-rose transition-colors">
+                <input
+                  type="checkbox"
+                  checked={insuranceOptIn}
+                  onChange={(e) => setInsuranceOptIn(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-rose"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {shippingSettings.insurance_label}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add ${(calculateInsuranceCents(subtotalCents, shippingSettings) / 100).toFixed(2)} — covers lost or damaged shipments.
+                  </p>
+                </div>
+              </label>
+            )}
+            <div className="rounded-xl border border-border bg-card p-2 md:p-4">
+              <StripeCartCheckout items={items} returnUrl={returnUrl} insuranceOptIn={insuranceOptIn} />
+            </div>
           </div>
 
           <aside className="rounded-xl border border-border p-6 h-fit bg-card space-y-4 sticky top-20">
@@ -112,6 +138,12 @@ function CheckoutPage() {
                     : "Calculated at checkout"}
                 </span>
               </div>
+              {insuranceCents > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Insurance</span>
+                  <span>${(insuranceCents / 100).toFixed(2)}</span>
+                </div>
+              )}
               {shippingSettings?.tax_mode === "manual" && (
                 <div className="flex justify-between border-t border-border pt-3 font-medium text-foreground">
                   <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>

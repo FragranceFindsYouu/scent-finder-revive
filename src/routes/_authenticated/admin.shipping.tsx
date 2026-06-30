@@ -27,6 +27,10 @@ function AdminShipping() {
   const [label, setLabel] = useState("");
   const [minD, setMinD] = useState("");
   const [maxD, setMaxD] = useState("");
+  const [insEnabled, setInsEnabled] = useState(false);
+  const [insFlat, setInsFlat] = useState("");
+  const [insPercent, setInsPercent] = useState("");
+  const [insLabel, setInsLabel] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +40,10 @@ function AdminShipping() {
     setLabel(settings.label);
     setMinD(String(settings.delivery_min_days));
     setMaxD(String(settings.delivery_max_days));
+    setInsEnabled(settings.insurance_enabled);
+    setInsFlat((settings.insurance_flat_cents / 100).toFixed(2));
+    setInsPercent((settings.insurance_percent_bps / 100).toFixed(2));
+    setInsLabel(settings.insurance_label);
   }, [settings]);
 
   async function save() {
@@ -43,6 +51,8 @@ function AdminShipping() {
     const flatC = Math.round(parseFloat(flat) * 100);
     const minN = parseInt(minD, 10);
     const maxN = parseInt(maxD, 10);
+    const insFlatC = Math.round(parseFloat(insFlat || "0") * 100);
+    const insBps = Math.round(parseFloat(insPercent || "0") * 100);
     if (!Number.isFinite(freeC) || freeC < 0) return toast.error("Enter a valid free shipping threshold.");
     if (!Number.isFinite(flatC) || flatC < 0) return toast.error("Enter a valid flat rate.");
     if (!Number.isFinite(minN) || minN < 1) return toast.error("Min days must be ≥ 1.");
@@ -56,7 +66,11 @@ function AdminShipping() {
         label: label.trim() || "Standard Shipping",
         delivery_min_days: minN,
         delivery_max_days: maxN,
-      })
+        insurance_enabled: insEnabled,
+        insurance_flat_cents: insFlatC,
+        insurance_percent_bps: insBps,
+        insurance_label: insLabel.trim() || "Shipping insurance (lost / damaged protection)",
+      } as never)
       .eq("id", 1);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -111,6 +125,42 @@ function AdminShipping() {
             </div>
           </Field>
         </div>
+
+        <div className="border-t border-border pt-5 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-display text-xl text-primary">Shipping insurance (opt-in)</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                When enabled, customers see a checkbox at checkout to add lost / damaged protection.
+              </p>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={insEnabled}
+                onChange={(e) => setInsEnabled(e.target.checked)}
+                className="h-4 w-4 accent-rose"
+              />
+              <span className="text-sm">{insEnabled ? "Enabled" : "Disabled"}</span>
+            </label>
+          </div>
+          {insEnabled && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <Field label="Flat insurance fee (USD)" prefix="$">
+                <input value={insFlat} onChange={(e) => setInsFlat(e.target.value)} className={inputCls} inputMode="decimal" />
+              </Field>
+              <Field label="Percent of cart (%)">
+                <input value={insPercent} onChange={(e) => setInsPercent(e.target.value)} className={inputCls} inputMode="decimal" />
+              </Field>
+              <div className="md:col-span-2">
+                <Field label="Checkout label">
+                  <input value={insLabel} onChange={(e) => setInsLabel(e.target.value)} className={inputCls} />
+                </Field>
+              </div>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={save}
           disabled={saving}

@@ -407,6 +407,10 @@ export type Database = {
           flat_rate_cents: number
           free_shipping_threshold_cents: number
           id: number
+          insurance_enabled: boolean
+          insurance_flat_cents: number
+          insurance_label: string
+          insurance_percent_bps: number
           label: string
           manual_tax_percent: number
           tax_mode: string
@@ -418,6 +422,10 @@ export type Database = {
           flat_rate_cents?: number
           free_shipping_threshold_cents?: number
           id?: number
+          insurance_enabled?: boolean
+          insurance_flat_cents?: number
+          insurance_label?: string
+          insurance_percent_bps?: number
           label?: string
           manual_tax_percent?: number
           tax_mode?: string
@@ -429,6 +437,10 @@ export type Database = {
           flat_rate_cents?: number
           free_shipping_threshold_cents?: number
           id?: number
+          insurance_enabled?: boolean
+          insurance_flat_cents?: number
+          insurance_label?: string
+          insurance_percent_bps?: number
           label?: string
           manual_tax_percent?: number
           tax_mode?: string

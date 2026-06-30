@@ -491,6 +491,44 @@ export const Route = createFileRoute("/api/chat")({
               },
             }),
 
+            get_insurance_settings: tool({
+              description: "Show the current shipping-insurance configuration (enabled, flat fee, percent of cart, label).",
+              inputSchema: z.object({}),
+              execute: async () => {
+                const { data, error } = await supabaseAdmin
+                  .from("shipping_settings")
+                  .select("insurance_enabled, insurance_flat_cents, insurance_percent_bps, insurance_label")
+                  .eq("id", 1)
+                  .maybeSingle();
+                if (error) return { error: error.message };
+                return { settings: data };
+              },
+            }),
+
+            set_insurance_settings: tool({
+              description:
+                "Configure the opt-in shipping insurance shown at checkout. Set enabled true/false, the flat fee in USD, the percent of cart, and the customer-facing label.",
+              inputSchema: z.object({
+                enabled: z.boolean(),
+                flat_usd: z.number().min(0).max(100).optional(),
+                percent_of_cart: z.number().min(0).max(25).optional(),
+                label: z.string().min(2).max(120).optional(),
+              }),
+              execute: async ({ enabled, flat_usd, percent_of_cart, label }) => {
+                const patch: Record<string, unknown> = { insurance_enabled: enabled };
+                if (flat_usd != null) patch.insurance_flat_cents = Math.round(flat_usd * 100);
+                if (percent_of_cart != null) patch.insurance_percent_bps = Math.round(percent_of_cart * 100);
+                if (label != null) patch.insurance_label = label;
+                const { error } = await supabaseAdmin
+                  .from("shipping_settings")
+                  .update(patch as never)
+                  .eq("id", 1);
+                if (error) return { error: error.message };
+                return { ok: true };
+              },
+            }),
+
+
             list_promotion_banners: tool({
               description: "List promotional site banners with text, photo URL, active status, and typography/color styles.",
               inputSchema: z.object({

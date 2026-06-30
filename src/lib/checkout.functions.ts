@@ -26,6 +26,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       returnUrl: string;
       customerEmail?: string;
       environment: StripeEnv;
+      insuranceOptIn?: boolean;
     }) => {
       if (!Array.isArray(data.items) || data.items.length === 0) {
         throw new Error("Cart is empty");
@@ -90,26 +91,37 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       // Load shipping + tax settings
       const { data: ship } = await supabasePublic
         .from("shipping_settings")
-        .select("free_shipping_threshold_cents, flat_rate_cents, label, delivery_min_days, delivery_max_days, tax_mode, manual_tax_percent")
+        .select("*")
         .eq("id", 1)
         .maybeSingle();
 
-      const taxMode = (ship as { tax_mode?: string } | null)?.tax_mode ?? "none";
-      const manualTaxPercent = Number(
-        (ship as { manual_tax_percent?: number } | null)?.manual_tax_percent ?? 0,
-      );
+      const shipAny = (ship ?? {}) as Record<string, unknown>;
+      const taxMode = (shipAny.tax_mode as string | undefined) ?? "none";
+      const manualTaxPercent = Number(shipAny.manual_tax_percent ?? 0);
+      const insuranceEnabled = Boolean(shipAny.insurance_enabled);
+      const insuranceFlatCents = Number(shipAny.insurance_flat_cents ?? 0);
+      const insurancePercentBps = Number(shipAny.insurance_percent_bps ?? 0);
+      const insuranceLabel =
+        (shipAny.insurance_label as string | undefined) ||
+        "Shipping insurance (lost / damaged protection)";
 
       const subtotalCents = data.items.reduce(
         (s, i) => s + i.unitAmount * i.quantity,
         0,
       );
 
-      const flatRate = ship?.flat_rate_cents ?? 500;
-      const freeThreshold = ship?.free_shipping_threshold_cents ?? 5000;
-      const shippingLabel = ship?.label ?? "Standard Shipping";
-      const minDays = ship?.delivery_min_days ?? 3;
-      const maxDays = ship?.delivery_max_days ?? 7;
+      const flatRate = Number(shipAny.flat_rate_cents ?? 500);
+      const freeThreshold = Number(shipAny.free_shipping_threshold_cents ?? 5000);
+      const shippingLabel = (shipAny.label as string | undefined) ?? "Standard Shipping";
+      const minDays = Number(shipAny.delivery_min_days ?? 3);
+      const maxDays = Number(shipAny.delivery_max_days ?? 7);
       const qualifiesFree = subtotalCents >= freeThreshold;
+
+      const insuranceCents =
+        insuranceEnabled && data.insuranceOptIn
+          ? Math.max(0, insuranceFlatCents) +
+            Math.round((subtotalCents * Math.max(0, insurancePercentBps)) / 10000)
+          : 0;
 
       const productTaxById = new Map<string, number | null>();
       if (taxMode === "manual") {
@@ -174,6 +186,18 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         line_items: [
           ...productLineItems,
+          ...(insuranceCents > 0
+            ? [
+                {
+                  quantity: 1,
+                  price_data: {
+                    currency: "usd",
+                    unit_amount: insuranceCents,
+                    product_data: { name: insuranceLabel },
+                  },
+                },
+              ]
+            : []),
           ...(manualTaxCents > 0
             ? [
                 {
@@ -212,6 +236,8 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           tax_mode: taxMode,
           manual_tax_percent: String(manualTaxPercent),
           manual_tax_cents: String(manualTaxCents),
+          insurance_cents: String(insuranceCents),
+          insurance_opt_in: data.insuranceOptIn ? "yes" : "no",
         },
       };
 
