@@ -75,8 +75,28 @@ function CheckoutPage() {
         </div>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
-          <div className="rounded-xl border border-border bg-card p-2 md:p-4">
-            <StripeCartCheckout items={items} returnUrl={returnUrl} />
+          <div className="space-y-4">
+            {shippingSettings?.insurance_enabled && (
+              <label className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 cursor-pointer hover:border-rose transition-colors">
+                <input
+                  type="checkbox"
+                  checked={insuranceOptIn}
+                  onChange={(e) => setInsuranceOptIn(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-rose"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {shippingSettings.insurance_label}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add ${(calculateInsuranceCents(subtotalCents, shippingSettings) / 100).toFixed(2)} — covers lost or damaged shipments.
+                  </p>
+                </div>
+              </label>
+            )}
+            <div className="rounded-xl border border-border bg-card p-2 md:p-4">
+              <StripeCartCheckout items={items} returnUrl={returnUrl} insuranceOptIn={insuranceOptIn} />
+            </div>
           </div>
 
           <aside className="rounded-xl border border-border p-6 h-fit bg-card space-y-4 sticky top-20">
