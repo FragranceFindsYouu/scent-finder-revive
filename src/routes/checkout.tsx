@@ -20,6 +20,7 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { items, subtotal } = useCart();
+  const [insuranceOptIn, setInsuranceOptIn] = useState(false);
   const { data: shippingSettings } = useQuery(shippingSettingsQueryOptions);
 
   if (items.length === 0) {
