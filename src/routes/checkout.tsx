@@ -138,6 +138,12 @@ function CheckoutPage() {
                     : "Calculated at checkout"}
                 </span>
               </div>
+              {insuranceCents > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Insurance</span>
+                  <span>${(insuranceCents / 100).toFixed(2)}</span>
+                </div>
+              )}
               {shippingSettings?.tax_mode === "manual" && (
                 <div className="flex justify-between border-t border-border pt-3 font-medium text-foreground">
                   <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>
