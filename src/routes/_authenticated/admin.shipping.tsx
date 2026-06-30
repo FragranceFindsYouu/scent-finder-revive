@@ -125,6 +125,42 @@ function AdminShipping() {
             </div>
           </Field>
         </div>
+
+        <div className="border-t border-border pt-5 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-display text-xl text-primary">Shipping insurance (opt-in)</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                When enabled, customers see a checkbox at checkout to add lost / damaged protection.
+              </p>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={insEnabled}
+                onChange={(e) => setInsEnabled(e.target.checked)}
+                className="h-4 w-4 accent-rose"
+              />
+              <span className="text-sm">{insEnabled ? "Enabled" : "Disabled"}</span>
+            </label>
+          </div>
+          {insEnabled && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <Field label="Flat insurance fee (USD)" prefix="$">
+                <input value={insFlat} onChange={(e) => setInsFlat(e.target.value)} className={inputCls} inputMode="decimal" />
+              </Field>
+              <Field label="Percent of cart (%)">
+                <input value={insPercent} onChange={(e) => setInsPercent(e.target.value)} className={inputCls} inputMode="decimal" />
+              </Field>
+              <div className="md:col-span-2">
+                <Field label="Checkout label">
+                  <input value={insLabel} onChange={(e) => setInsLabel(e.target.value)} className={inputCls} />
+                </Field>
+              </div>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={save}
           disabled={saving}
