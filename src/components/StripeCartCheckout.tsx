@@ -8,10 +8,12 @@ export function StripeCartCheckout({
   items,
   customerEmail,
   returnUrl,
+  insuranceOptIn,
 }: {
   items: CartItem[];
   customerEmail?: string;
   returnUrl: string;
+  insuranceOptIn?: boolean;
 }) {
   const stripePromise = useMemo(() => getStripe(), []);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -23,6 +25,7 @@ export function StripeCartCheckout({
           environment: getStripeEnvironment(),
           returnUrl,
           customerEmail,
+          insuranceOptIn,
           items: items.map((i) => ({
             productId: i.product_id,
             variantId: i.variant_id,
@@ -44,7 +47,7 @@ export function StripeCartCheckout({
       setErrorMsg(msg);
       throw err;
     }
-  }, [items, customerEmail, returnUrl]);
+  }, [items, customerEmail, returnUrl, insuranceOptIn]);
 
   const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret]);
 
