@@ -72,6 +72,7 @@ function AdminShipping() {
         insurance_flat_cents: insFlatC,
         insurance_percent_bps: insBps,
         insurance_label: insLabel.trim() || "Shipping insurance (lost / damaged protection)",
+        show_tax_in_notice: showTaxNotice,
       } as never)
       .eq("id", 1);
     setSaving(false);
