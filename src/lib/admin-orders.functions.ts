@@ -19,6 +19,8 @@ export type AdminOrder = {
   created_at: string;
   refunded_at: string | null;
   cancelled_at: string | null;
+  refund_method: string | null;
+  refunded_amount_cents: number | null;
 };
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
