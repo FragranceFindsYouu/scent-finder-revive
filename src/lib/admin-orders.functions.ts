@@ -38,7 +38,7 @@ export const listOrdersAdmin = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("orders")
       .select(
-        "id, stripe_session_id, customer_email, customer_name, shipping_address, items, total_amount_cents, payment_intent_id, status, created_at, refunded_at, cancelled_at",
+        "id, stripe_session_id, customer_email, customer_name, shipping_address, items, total_amount_cents, payment_intent_id, status, created_at, refunded_at, cancelled_at, refund_method, refunded_amount_cents",
       )
       .order("created_at", { ascending: false })
       .limit(200);
