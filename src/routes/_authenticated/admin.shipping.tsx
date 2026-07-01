@@ -31,6 +31,7 @@ function AdminShipping() {
   const [insFlat, setInsFlat] = useState("");
   const [insPercent, setInsPercent] = useState("");
   const [insLabel, setInsLabel] = useState("");
+  const [showTaxNotice, setShowTaxNotice] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ function AdminShipping() {
     setInsFlat((settings.insurance_flat_cents / 100).toFixed(2));
     setInsPercent((settings.insurance_percent_bps / 100).toFixed(2));
     setInsLabel(settings.insurance_label);
+    setShowTaxNotice(settings.show_tax_in_notice);
   }, [settings]);
 
   async function save() {
@@ -70,6 +72,7 @@ function AdminShipping() {
         insurance_flat_cents: insFlatC,
         insurance_percent_bps: insBps,
         insurance_label: insLabel.trim() || "Shipping insurance (lost / damaged protection)",
+        show_tax_in_notice: showTaxNotice,
       } as never)
       .eq("id", 1);
     setSaving(false);
@@ -160,6 +163,25 @@ function AdminShipping() {
             </div>
           )}
         </div>
+
+        <div className="border-t border-border pt-5">
+          <label className="inline-flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showTaxNotice}
+              onChange={(e) => setShowTaxNotice(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-rose"
+            />
+            <span className="text-sm">
+              <span className="font-medium">Show tax percentage on the shipping notice</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                When off, the "Tax X%" chip is hidden from the top-of-cart shipping banner. Tax is still charged at checkout.
+              </span>
+            </span>
+          </label>
+        </div>
+
+
 
         <button
           onClick={save}

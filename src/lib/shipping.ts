@@ -15,6 +15,7 @@ export type ShippingSettings = {
   insurance_flat_cents: number;
   insurance_percent_bps: number;
   insurance_label: string;
+  show_tax_in_notice: boolean;
 };
 
 const DEFAULT_SETTINGS: ShippingSettings = {
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: ShippingSettings = {
   insurance_flat_cents: 199,
   insurance_percent_bps: 0,
   insurance_label: "Shipping insurance (lost / damaged protection)",
+  show_tax_in_notice: false,
 };
 
 export function calculateManualTaxCents(

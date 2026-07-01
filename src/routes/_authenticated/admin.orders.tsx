@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   listOrdersAdmin,
-  refundOrderAdmin,
+  refundOrderCustomAdmin,
   type AdminOrder,
 } from "@/lib/admin-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -17,16 +17,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   head: () => ({
@@ -60,7 +52,7 @@ function statusPill(status: string) {
 function AdminOrdersPage() {
   const { isAdmin, ready } = useIsAdmin();
   const listFn = useServerFn(listOrdersAdmin);
-  const refundFn = useServerFn(refundOrderAdmin);
+  const refundFn = useServerFn(refundOrderCustomAdmin);
   const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
@@ -71,8 +63,9 @@ function AdminOrdersPage() {
   });
 
   const [selected, setSelected] = useState<AdminOrder | null>(null);
-  const [confirmRefund, setConfirmRefund] = useState(false);
   const [refunding, setRefunding] = useState(false);
+  const [refundMethod, setRefundMethod] = useState<"original" | "store_credit">("original");
+  const [refundAmount, setRefundAmount] = useState<string>("");
 
   if (!ready) {
     return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-muted-foreground">Loading…</div>;
@@ -89,15 +82,29 @@ function AdminOrdersPage() {
 
   const handleRefund = async () => {
     if (!selected) return;
+    const dollars = Number.parseFloat(refundAmount);
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+      toast.error("Enter a refund amount greater than $0.");
+      return;
+    }
     setRefunding(true);
     try {
       const result = await refundFn({
-        data: { orderId: selected.id, environment: getStripeEnvironment() },
+        data: {
+          orderId: selected.id,
+          environment: getStripeEnvironment(),
+          method: refundMethod,
+          amountCents: Math.round(dollars * 100),
+        },
       });
       if ("error" in result) throw new Error(result.error);
-      toast.success("Refund issued and inventory restocked.");
+      if (result.storeCreditCode) {
+        toast.success(`Store credit issued: ${result.storeCreditCode}`);
+      } else {
+        toast.success("Refund issued to original payment.");
+      }
       await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      setConfirmRefund(false);
+      setRefundAmount("");
       setSelected(null);
     } catch (e) {
       toast.error((e as Error).message);
@@ -105,6 +112,7 @@ function AdminOrdersPage() {
       setRefunding(false);
     }
   };
+
 
   return (
     <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
@@ -227,20 +235,81 @@ function AdminOrdersPage() {
                   </div>
                 </section>
 
-                {selected.status === "paid" && (
-                  <button
-                    onClick={() => setConfirmRefund(true)}
-                    className="w-full rounded-full bg-bordeaux text-white px-6 py-3 text-xs uppercase tracking-[0.2em] hover:opacity-90"
-                  >
-                    Cancel & refund order
-                  </button>
+                {selected.status !== "refunded" && selected.status !== "cancelled" && (
+                  <section className="rounded-lg border border-border p-4 space-y-3">
+                    <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      Issue refund
+                    </h3>
+                    {(() => {
+                      const total = selected.total_amount_cents ?? 0;
+                      const already = selected.refunded_amount_cents ?? 0;
+                      const remaining = total - already;
+                      return (
+                        <>
+                          <p className="text-xs text-muted-foreground">
+                            Remaining refundable: <span className="text-foreground font-medium">{money(remaining)}</span>
+                            {already > 0 && <> · Already refunded {money(already)}</>}
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setRefundMethod("original")}
+                              className={`rounded-md border px-3 py-2 text-xs uppercase tracking-[0.15em] ${refundMethod === "original" ? "border-bordeaux bg-bordeaux/10 text-bordeaux" : "border-border text-muted-foreground"}`}
+                            >
+                              Original payment
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setRefundMethod("store_credit")}
+                              className={`rounded-md border px-3 py-2 text-xs uppercase tracking-[0.15em] ${refundMethod === "store_credit" ? "border-bordeaux bg-bordeaux/10 text-bordeaux" : "border-border text-muted-foreground"}`}
+                            >
+                              Store credit
+                            </button>
+                          </div>
+                          <div>
+                            <Label htmlFor="refund-amt" className="text-xs">Amount (USD)</Label>
+                            <div className="mt-1 flex gap-2">
+                              <Input
+                                id="refund-amt"
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                placeholder={(remaining / 100).toFixed(2)}
+                                value={refundAmount}
+                                onChange={(e) => setRefundAmount(e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setRefundAmount((remaining / 100).toFixed(2))}
+                                className="rounded-md border border-border px-3 text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground"
+                              >
+                                Full
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRefund}
+                            disabled={refunding}
+                            className="w-full rounded-full bg-bordeaux text-white px-6 py-3 text-xs uppercase tracking-[0.2em] hover:opacity-90 disabled:opacity-50"
+                          >
+                            {refunding
+                              ? "Processing…"
+                              : refundMethod === "original"
+                                ? "Refund to original payment"
+                                : "Issue store credit code"}
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </section>
                 )}
                 {(selected.status === "refunded" || selected.status === "cancelled") && (
                   <p className="text-xs text-muted-foreground">
-                    Refunded on{" "}
+                    Fully refunded on{" "}
                     {selected.refunded_at
                       ? new Date(selected.refunded_at).toLocaleString()
                       : "—"}
+                    {selected.refund_method && <> · via {selected.refund_method === "store_credit" ? "store credit" : "original payment"}</>}
                     . Inventory has been restocked.
                   </p>
                 )}
@@ -255,30 +324,6 @@ function AdminOrdersPage() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={confirmRefund} onOpenChange={setConfirmRefund}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Refund this order?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This issues a full refund through Stripe and adds the purchased
-              quantities back to inventory. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={refunding}>Keep order</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={refunding}
-              onClick={(e) => {
-                e.preventDefault();
-                handleRefund();
-              }}
-              className="bg-bordeaux text-white hover:opacity-90"
-            >
-              {refunding ? "Refunding…" : "Refund & restock"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
