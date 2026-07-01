@@ -15,6 +15,7 @@ export type ShippingSettings = {
   insurance_flat_cents: number;
   insurance_percent_bps: number;
   insurance_label: string;
+  show_tax_in_notice: boolean;
 };
 
 const DEFAULT_SETTINGS: ShippingSettings = {
