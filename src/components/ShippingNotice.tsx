@@ -15,6 +15,7 @@ export function ShippingNotice({
   const free = data.free_shipping_threshold_cents;
   const flat = data.flat_rate_cents;
   const manualTax = data.tax_mode === "manual" ? data.manual_tax_percent : 0;
+  const showTax = data.show_tax_in_notice && manualTax > 0;
   const qualifies = subtotalCents !== undefined && subtotalCents >= free;
   const remaining = subtotalCents !== undefined ? Math.max(0, free - subtotalCents) : null;
 
