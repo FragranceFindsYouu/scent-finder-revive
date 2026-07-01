@@ -52,7 +52,7 @@ function statusPill(status: string) {
 function AdminOrdersPage() {
   const { isAdmin, ready } = useIsAdmin();
   const listFn = useServerFn(listOrdersAdmin);
-  const refundFn = useServerFn(refundOrderAdmin);
+  const refundFn = useServerFn(refundOrderCustomAdmin);
   const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
@@ -63,8 +63,9 @@ function AdminOrdersPage() {
   });
 
   const [selected, setSelected] = useState<AdminOrder | null>(null);
-  const [confirmRefund, setConfirmRefund] = useState(false);
   const [refunding, setRefunding] = useState(false);
+  const [refundMethod, setRefundMethod] = useState<"original" | "store_credit">("original");
+  const [refundAmount, setRefundAmount] = useState<string>("");
 
   if (!ready) {
     return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-muted-foreground">Loading…</div>;
@@ -81,15 +82,29 @@ function AdminOrdersPage() {
 
   const handleRefund = async () => {
     if (!selected) return;
+    const dollars = Number.parseFloat(refundAmount);
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+      toast.error("Enter a refund amount greater than $0.");
+      return;
+    }
     setRefunding(true);
     try {
       const result = await refundFn({
-        data: { orderId: selected.id, environment: getStripeEnvironment() },
+        data: {
+          orderId: selected.id,
+          environment: getStripeEnvironment(),
+          method: refundMethod,
+          amountCents: Math.round(dollars * 100),
+        },
       });
       if ("error" in result) throw new Error(result.error);
-      toast.success("Refund issued and inventory restocked.");
+      if (result.storeCreditCode) {
+        toast.success(`Store credit issued: ${result.storeCreditCode}`);
+      } else {
+        toast.success("Refund issued to original payment.");
+      }
       await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      setConfirmRefund(false);
+      setRefundAmount("");
       setSelected(null);
     } catch (e) {
       toast.error((e as Error).message);
@@ -97,6 +112,7 @@ function AdminOrdersPage() {
       setRefunding(false);
     }
   };
+
 
   return (
     <div className="mx-auto max-w-6xl px-6 lg:px-10 py-12">
