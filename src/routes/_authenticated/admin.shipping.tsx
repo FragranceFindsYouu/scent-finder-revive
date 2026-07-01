@@ -164,6 +164,25 @@ function AdminShipping() {
           )}
         </div>
 
+        <div className="border-t border-border pt-5">
+          <label className="inline-flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showTaxNotice}
+              onChange={(e) => setShowTaxNotice(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-rose"
+            />
+            <span className="text-sm">
+              <span className="font-medium">Show tax percentage on the shipping notice</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                When off, the "Tax X%" chip is hidden from the top-of-cart shipping banner. Tax is still charged at checkout.
+              </span>
+            </span>
+          </label>
+        </div>
+
+
+
         <button
           onClick={save}
           disabled={saving}
