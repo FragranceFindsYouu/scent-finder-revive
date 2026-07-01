@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   listOrdersAdmin,
-  refundOrderAdmin,
+  refundOrderCustomAdmin,
   type AdminOrder,
 } from "@/lib/admin-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
