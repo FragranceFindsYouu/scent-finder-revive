@@ -45,6 +45,7 @@ function AdminShipping() {
     setInsFlat((settings.insurance_flat_cents / 100).toFixed(2));
     setInsPercent((settings.insurance_percent_bps / 100).toFixed(2));
     setInsLabel(settings.insurance_label);
+    setShowTaxNotice(settings.show_tax_in_notice);
   }, [settings]);
 
   async function save() {
