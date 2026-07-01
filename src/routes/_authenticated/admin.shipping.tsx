@@ -31,6 +31,7 @@ function AdminShipping() {
   const [insFlat, setInsFlat] = useState("");
   const [insPercent, setInsPercent] = useState("");
   const [insLabel, setInsLabel] = useState("");
+  const [showTaxNotice, setShowTaxNotice] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
