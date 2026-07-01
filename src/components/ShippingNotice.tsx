@@ -45,7 +45,7 @@ export function ShippingNotice({
           {" "}
           · Flat ${(flat / 100).toFixed(2)} otherwise · {data.delivery_min_days}–
           {data.delivery_max_days} business days
-          {manualTax > 0 && <> · Tax {manualTax.toFixed(2).replace(/\.00$/, "")}%</>}
+          {showTax && <> · Tax {manualTax.toFixed(2).replace(/\.00$/, "")}%</>}
         </span>
       </div>
     </div>
