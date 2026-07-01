@@ -168,6 +168,8 @@ export type Database = {
           id: string
           items: Json
           payment_intent_id: string | null
+          refund_method: string | null
+          refunded_amount_cents: number | null
           refunded_at: string | null
           review_token: string
           shipping_address: Json | null
@@ -184,6 +186,8 @@ export type Database = {
           id?: string
           items?: Json
           payment_intent_id?: string | null
+          refund_method?: string | null
+          refunded_amount_cents?: number | null
           refunded_at?: string | null
           review_token?: string
           shipping_address?: Json | null
@@ -200,6 +204,8 @@ export type Database = {
           id?: string
           items?: Json
           payment_intent_id?: string | null
+          refund_method?: string | null
+          refunded_amount_cents?: number | null
           refunded_at?: string | null
           review_token?: string
           shipping_address?: Json | null
@@ -413,6 +419,7 @@ export type Database = {
           insurance_percent_bps: number
           label: string
           manual_tax_percent: number
+          show_tax_in_notice: boolean
           tax_mode: string
           updated_at: string
         }
@@ -428,6 +435,7 @@ export type Database = {
           insurance_percent_bps?: number
           label?: string
           manual_tax_percent?: number
+          show_tax_in_notice?: boolean
           tax_mode?: string
           updated_at?: string
         }
@@ -443,6 +451,7 @@ export type Database = {
           insurance_percent_bps?: number
           label?: string
           manual_tax_percent?: number
+          show_tax_in_notice?: boolean
           tax_mode?: string
           updated_at?: string
         }
@@ -468,6 +477,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      store_credits: {
+        Row: {
+          amount_cents: number
+          code: string
+          created_at: string
+          customer_email: string | null
+          id: string
+          order_id: string | null
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          code: string
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          code?: string
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_credits_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
