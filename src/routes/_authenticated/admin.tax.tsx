@@ -84,7 +84,7 @@ function AdminTax() {
     if (mode === current) return;
     setSaving(mode);
     const patch: { tax_mode: string; manual_tax_percent?: number } = { tax_mode: mode };
-    if (mode === "manual" && settings?.manual_tax_percent === 0) patch.manual_tax_percent = 7;
+    if (mode === "manual" && (settings?.manual_tax_percent ?? 0) === 0) patch.manual_tax_percent = 10.25;
 
     const { error } = await supabase
       .from("shipping_settings")
@@ -103,6 +103,7 @@ function AdminTax() {
     );
     qc.invalidateQueries({ queryKey: ["shipping_settings"] });
   }
+
 
   async function saveManualRate() {
     const rate = Number.parseFloat(shownManualRate || "0");
@@ -163,6 +164,19 @@ function AdminTax() {
           ← Dashboard
         </Link>
       </div>
+
+      <div className="mt-6 rounded-2xl border border-rose/40 bg-rose/5 p-5 text-sm text-foreground/85">
+        <p className="font-medium text-primary">Illinois nexus configured</p>
+        <p className="mt-1">
+          Shipping is now restricted to <strong>United States only</strong>, and the manual tax default is set to
+          <strong> 10.25% </strong> (Chicago combined state + local). Because Stripe can’t see the shipping state until
+          after the customer starts checkout, manual tax is charged to <strong>every US order</strong>. If you want to
+          charge tax <em>only</em> when the shipping address is Illinois, switch to <strong>Calculate &amp; collect</strong>
+          below and add IL in your Stripe Dashboard → Tax → Registrations.
+        </p>
+      </div>
+
+
 
       <div className="mt-10 grid gap-4">
         {OPTIONS.map((opt) => {

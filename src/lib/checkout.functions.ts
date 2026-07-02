@@ -216,8 +216,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         shipping_options: shippingOptions,
         billing_address_collection: "auto" as const,
         shipping_address_collection: {
-          allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "DK", "IE"] as Array<"US">,
+          allowed_countries: ["US"] as Array<"US">,
         },
+
         phone_number_collection: { enabled: true },
         ...(data.customerEmail && { customer_email: data.customerEmail }),
         payment_intent_data: {

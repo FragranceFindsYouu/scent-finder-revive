@@ -275,18 +275,41 @@ function VariantRow({
   onDelete: (v: ProductVariant) => Promise<void>;
 }) {
   const [stock, setStock] = useState(String(v.stock_count));
+  const [price, setPrice] = useState(v.price.toFixed(2));
+  const stockDirty = String(v.stock_count) !== stock;
+  const priceDirty = v.price.toFixed(2) !== Number(price || 0).toFixed(2);
+  const dirty = stockDirty || priceDirty;
+
+  async function save() {
+    const patch: Partial<ProductVariant> = {};
+    if (stockDirty) patch.stock_count = parseInt(stock || "0", 10);
+    if (priceDirty) {
+      const n = Number(price);
+      if (!Number.isFinite(n) || n < 0) return;
+      patch.price = Math.round(n * 100) / 100;
+    }
+    if (Object.keys(patch).length) await onUpdate(v, patch);
+  }
+
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="w-16 font-mono">{v.size}</span>
-      <span className="w-16 text-muted-foreground">${v.price.toFixed(2)}</span>
+      <span className="w-14 font-mono">{v.size}</span>
+      <span className="text-muted-foreground">$</span>
+      <input
+        value={price}
+        onChange={(e) => setPrice(e.target.value.replace(/[^0-9.]/g, ""))}
+        title="Price (USD)"
+        className="w-16 border rounded px-2 py-1 text-center text-sm"
+      />
       <button onClick={() => setStock(String(Math.max(0, parseInt(stock || "0") - 1)))} className="p-1 border rounded"><Minus size={12} /></button>
       <input value={stock} onChange={(e) => setStock(e.target.value.replace(/\D/g, ""))} className="w-14 border rounded px-2 py-1 text-center text-sm" />
       <button onClick={() => setStock(String(parseInt(stock || "0") + 1))} className="p-1 border rounded"><Plus size={12} /></button>
-      <button onClick={() => onUpdate(v, { stock_count: parseInt(stock || "0", 10) })} title="Save stock" className="p-1.5 bg-primary text-primary-foreground rounded"><Check size={12} /></button>
+      <button onClick={save} disabled={!dirty} title="Save price & stock" className="p-1.5 bg-primary text-primary-foreground rounded disabled:opacity-40"><Check size={12} /></button>
       <button onClick={() => onDelete(v)} title="Delete size" className="p-1.5 text-rose hover:bg-rose/10 rounded ml-auto"><Trash2 size={12} /></button>
     </div>
   );
 }
+
 
 function AddProductDialog({
   open, onClose, onChanged, nextOrder,
