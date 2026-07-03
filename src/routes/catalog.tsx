@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { productsQueryOptions } from "@/lib/products";
 import { FragranceCard } from "@/components/FragranceCard";
+import { EditableProductGrid } from "@/components/EditableProductGrid";
+import { useEditMode } from "@/lib/editMode";
 import { EditableText } from "@/lib/siteSettings";
 
 export const Route = createFileRoute("/catalog")({
@@ -21,6 +23,7 @@ type Sort = "az" | "za" | "low" | "high";
 
 function Catalog() {
   const { data: products = [], isLoading } = useQuery(productsQueryOptions);
+  const { editMode } = useEditMode();
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("az");
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -88,6 +91,8 @@ function Catalog() {
               </div>
             ))}
           </div>
+        ) : editMode ? (
+          <EditableProductGrid products={items} />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
             {items.map((f) => <FragranceCard key={f.id} f={f} />)}
