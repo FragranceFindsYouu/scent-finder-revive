@@ -71,20 +71,62 @@ export const getOrderByToken = createServerFn({ method: "GET" })
     };
   });
 
+export type OrderSummary = {
+  token: string | null;
+  order_number: number | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  total_cents: number | null;
+  discount_cents: number | null;
+  promo_code: string | null;
+  items: Array<{ title: string; size: string; quantity: number; handle?: string }>;
+  shipping_address: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+  } | null;
+};
+
 export const getReviewTokenForSession = createServerFn({ method: "GET" })
   .inputValidator((data: { sessionId: string }) => {
     if (!data.sessionId || typeof data.sessionId !== "string") throw new Error("invalid");
     return data;
   })
-  .handler(async ({ data }): Promise<{ token: string | null }> => {
+  .handler(async ({ data }): Promise<OrderSummary> => {
     const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
     const { data: order } = await supabaseAdmin
       .from("orders")
-      .select("review_token")
+      .select(
+        "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, items, shipping_address",
+      )
       .eq("stripe_session_id", data.sessionId)
       .maybeSingle();
-    return { token: (order as { review_token?: string } | null)?.review_token ?? null };
+    const o = order as {
+      review_token?: string;
+      order_number?: number;
+      customer_email?: string | null;
+      customer_name?: string | null;
+      total_amount_cents?: number | null;
+      discount_cents?: number | null;
+      promo_code?: string | null;
+      items?: OrderSummary["items"];
+      shipping_address?: OrderSummary["shipping_address"];
+    } | null;
+    return {
+      token: o?.review_token ?? null,
+      order_number: o?.order_number ?? null,
+      customer_email: o?.customer_email ?? null,
+      customer_name: o?.customer_name ?? null,
+      total_cents: o?.total_amount_cents ?? null,
+      discount_cents: o?.discount_cents ?? null,
+      promo_code: o?.promo_code ?? null,
+      items: o?.items ?? [],
+      shipping_address: o?.shipping_address ?? null,
+    };
   });
 
 export const submitReview = createServerFn({ method: "POST" })

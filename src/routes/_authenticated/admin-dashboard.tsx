@@ -472,6 +472,12 @@ function AdminDashboard() {
             Promotions
           </Link>
           <Link
+            to="/admin/promo-codes"
+            className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
+          >
+            Promo codes
+          </Link>
+          <Link
             to="/admin/reviews"
             className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
           >

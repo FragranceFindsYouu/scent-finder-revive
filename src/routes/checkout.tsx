@@ -6,7 +6,15 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ShippingNotice } from "@/components/ShippingNotice";
 import { EditableText } from "@/lib/siteSettings";
 import { useQuery } from "@tanstack/react-query";
-import { calculateInsuranceCents, calculateManualTaxCents, shippingSettingsQueryOptions } from "@/lib/shipping";
+import { toast } from "sonner";
+import {
+  calculateInsuranceCents,
+  calculateManualTaxCents,
+  shippingSettingsQueryOptions,
+} from "@/lib/shipping";
+import { validatePromoCode, type ValidatePromoResult } from "@/lib/promo.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Tag, X } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -22,6 +30,38 @@ function CheckoutPage() {
   const { items, subtotal } = useCart();
   const [insuranceOptIn, setInsuranceOptIn] = useState(false);
   const { data: shippingSettings } = useQuery(shippingSettingsQueryOptions);
+  const validateFn = useServerFn(validatePromoCode);
+
+  const [promoInput, setPromoInput] = useState("");
+  const [applied, setApplied] = useState<Extract<ValidatePromoResult, { ok: true }> | null>(null);
+  const [validating, setValidating] = useState(false);
+
+  const subtotalCents = Math.round(subtotal * 100);
+
+  async function apply() {
+    const code = promoInput.trim();
+    if (!code) return;
+    setValidating(true);
+    try {
+      const res = await validateFn({ data: { code, subtotalCents } });
+      if (!res.ok) {
+        toast.error(res.error);
+        setApplied(null);
+        return;
+      }
+      setApplied(res);
+      toast.success(`${res.code} applied — you saved $${(res.discount_cents / 100).toFixed(2)}!`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setValidating(false);
+    }
+  }
+
+  function remove() {
+    setApplied(null);
+    setPromoInput("");
+  }
 
   if (items.length === 0) {
     return (
@@ -45,7 +85,6 @@ function CheckoutPage() {
       ? `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`
       : "/checkout/return?session_id={CHECKOUT_SESSION_ID}";
 
-  const subtotalCents = Math.round(subtotal * 100);
   const manualTaxCents =
     shippingSettings?.tax_mode === "manual"
       ? calculateManualTaxCents(items, shippingSettings.manual_tax_percent)
@@ -59,7 +98,9 @@ function CheckoutPage() {
     shippingSettings && insuranceOptIn
       ? calculateInsuranceCents(subtotalCents, shippingSettings)
       : 0;
-  const estimatedTotalCents = subtotalCents + manualTaxCents + shippingCents + insuranceCents;
+  const discountCents = applied?.discount_cents ?? 0;
+  const estimatedTotalCents =
+    subtotalCents + manualTaxCents + shippingCents + insuranceCents - discountCents;
 
   return (
     <>
@@ -71,11 +112,55 @@ function CheckoutPage() {
         </EditableText>
 
         <div className="mt-6">
-          <ShippingNotice subtotalCents={Math.round(subtotal * 100)} />
+          <ShippingNotice subtotalCents={subtotalCents} />
         </div>
 
         <div className="mt-10 grid lg:grid-cols-[1fr_360px] gap-10">
           <div className="space-y-4">
+            {/* Promo code */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <Tag className="h-3.5 w-3.5" /> Promo code
+              </div>
+              {applied ? (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-rose/10 px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium text-primary">{applied.code} applied</p>
+                    <p className="text-xs text-muted-foreground">
+                      You saved ${(applied.discount_cents / 100).toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={remove}
+                    className="rounded-full p-2 text-muted-foreground hover:text-primary"
+                    aria-label="Remove promo code"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === "Enter" && apply()}
+                    placeholder="Enter code"
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-rose"
+                  />
+                  <button
+                    type="button"
+                    onClick={apply}
+                    disabled={validating || !promoInput.trim()}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-5 text-xs uppercase tracking-[0.2em] text-primary-foreground hover:bg-rose disabled:opacity-60"
+                  >
+                    {validating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Apply
+                  </button>
+                </div>
+              )}
+            </div>
+
             {shippingSettings?.insurance_enabled && (
               <label className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 cursor-pointer hover:border-rose transition-colors">
                 <input
@@ -95,7 +180,12 @@ function CheckoutPage() {
               </label>
             )}
             <div className="rounded-xl border border-border bg-card p-2 md:p-4">
-              <StripeCartCheckout items={items} returnUrl={returnUrl} insuranceOptIn={insuranceOptIn} />
+              <StripeCartCheckout
+                items={items}
+                returnUrl={returnUrl}
+                insuranceOptIn={insuranceOptIn}
+                promoCode={applied?.code}
+              />
             </div>
           </div>
 
@@ -126,6 +216,12 @@ function CheckoutPage() {
                 <EditableText id="checkout.summary.subtotal">Subtotal</EditableText>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
+              {applied && (
+                <div className="flex justify-between text-rose">
+                  <span>Promo ({applied.code})</span>
+                  <span>−${(applied.discount_cents / 100).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <EditableText id="checkout.summary.shippingLabel">Shipping</EditableText>
                 <span>{shippingSettings ? `$${(shippingCents / 100).toFixed(2)}` : "Calculated at checkout"}</span>
@@ -144,12 +240,10 @@ function CheckoutPage() {
                   <span>${(insuranceCents / 100).toFixed(2)}</span>
                 </div>
               )}
-              {shippingSettings?.tax_mode === "manual" && (
-                <div className="flex justify-between border-t border-border pt-3 font-medium text-foreground">
-                  <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>
-                  <span>${(estimatedTotalCents / 100).toFixed(2)}</span>
-                </div>
-              )}
+              <div className="flex justify-between border-t border-border pt-3 font-medium text-foreground">
+                <EditableText id="checkout.summary.totalLabel">Estimated total</EditableText>
+                <span>${(Math.max(0, estimatedTotalCents) / 100).toFixed(2)}</span>
+              </div>
             </div>
           </aside>
         </div>

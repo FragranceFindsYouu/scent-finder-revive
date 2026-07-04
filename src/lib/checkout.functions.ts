@@ -27,6 +27,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       customerEmail?: string;
       environment: StripeEnv;
       insuranceOptIn?: boolean;
+      promoCode?: string;
     }) => {
       if (!Array.isArray(data.items) || data.items.length === 0) {
         throw new Error("Cart is empty");
@@ -166,6 +167,66 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
 
       const stripe = createStripeClient(data.environment);
 
+      // Validate & create a Stripe coupon for the promo code (if any)
+      let promoCouponId: string | null = null;
+      let promoDiscountCents = 0;
+      let promoCodeApplied = "";
+      if (data.promoCode && data.promoCode.trim().length > 0) {
+        const codeText = data.promoCode.trim().toUpperCase().slice(0, 60);
+        const { data: promoRow } = await supabasePublic
+          .from("promo_codes")
+          .select(
+            "id, code, discount_type, discount_value, min_subtotal_cents, max_redemptions, redemption_count, is_active, starts_at, ends_at",
+          )
+          .ilike("code", codeText)
+          .maybeSingle();
+        const promo = promoRow as {
+          code: string;
+          discount_type: "percent" | "fixed";
+          discount_value: number;
+          min_subtotal_cents: number;
+          max_redemptions: number | null;
+          redemption_count: number;
+          is_active: boolean;
+          starts_at: string | null;
+          ends_at: string | null;
+        } | null;
+        if (!promo || !promo.is_active) return { error: "Promo code is invalid." };
+        const now = Date.now();
+        if (promo.starts_at && new Date(promo.starts_at).getTime() > now)
+          return { error: "Promo code isn't active yet." };
+        if (promo.ends_at && new Date(promo.ends_at).getTime() < now)
+          return { error: "Promo code has expired." };
+        if (promo.max_redemptions != null && promo.redemption_count >= promo.max_redemptions)
+          return { error: "Promo code has reached its limit." };
+        if (subtotalCents < promo.min_subtotal_cents)
+          return {
+            error: `Promo code needs a $${(promo.min_subtotal_cents / 100).toFixed(2)} minimum subtotal.`,
+          };
+        promoCodeApplied = promo.code;
+        if (promo.discount_type === "percent") {
+          const percent = Number(promo.discount_value);
+          promoDiscountCents = Math.round(subtotalCents * (percent / 100));
+          const coupon = await stripe.coupons.create({
+            percent_off: percent,
+            duration: "once",
+            name: `${promo.code} — ${percent}% off`,
+          });
+          promoCouponId = coupon.id;
+        } else {
+          const flatCents = Math.min(subtotalCents, Math.round(Number(promo.discount_value) * 100));
+          promoDiscountCents = flatCents;
+          const coupon = await stripe.coupons.create({
+            amount_off: flatCents,
+            currency: "usd",
+            duration: "once",
+            name: `${promo.code} — $${(flatCents / 100).toFixed(2)} off`,
+          });
+          promoCouponId = coupon.id;
+        }
+      }
+
+
       const productLineItems = data.items.map((item) => ({
         quantity: item.quantity,
         price_data: {
@@ -221,8 +282,10 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
 
         phone_number_collection: { enabled: true },
         ...(data.customerEmail && { customer_email: data.customerEmail }),
+        ...(promoCouponId && { discounts: [{ coupon: promoCouponId }] }),
         payment_intent_data: {
           description: `Fragrance Finds You — ${data.items.length} item${data.items.length === 1 ? "" : "s"}`,
+          ...(data.customerEmail && { receipt_email: data.customerEmail }),
         },
         metadata: {
           items: JSON.stringify(
@@ -239,6 +302,8 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           manual_tax_cents: String(manualTaxCents),
           insurance_cents: String(insuranceCents),
           insurance_opt_in: data.insuranceOptIn ? "yes" : "no",
+          promo_code: promoCodeApplied,
+          discount_cents: String(promoDiscountCents),
         },
       };
 

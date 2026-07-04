@@ -9,11 +9,13 @@ export function StripeCartCheckout({
   customerEmail,
   returnUrl,
   insuranceOptIn,
+  promoCode,
 }: {
   items: CartItem[];
   customerEmail?: string;
   returnUrl: string;
   insuranceOptIn?: boolean;
+  promoCode?: string;
 }) {
   const stripePromise = useMemo(() => getStripe(), []);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export function StripeCartCheckout({
           returnUrl,
           customerEmail,
           insuranceOptIn,
+          promoCode,
           items: items.map((i) => ({
             productId: i.product_id,
             variantId: i.variant_id,
@@ -47,7 +50,7 @@ export function StripeCartCheckout({
       setErrorMsg(msg);
       throw err;
     }
-  }, [items, customerEmail, returnUrl, insuranceOptIn]);
+  }, [items, customerEmail, returnUrl, insuranceOptIn, promoCode]);
 
   const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret]);
 
@@ -67,7 +70,7 @@ export function StripeCartCheckout({
   }
 
   return (
-    <div id="checkout">
+    <div id="checkout" key={promoCode ?? "no-promo"}>
       <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>

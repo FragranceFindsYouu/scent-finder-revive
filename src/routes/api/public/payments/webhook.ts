@@ -110,6 +110,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               const supabaseAdmin = _sa as unknown as { from: (t: string) => any; rpc: (n: string, p: any) => any; auth: any };
 
               // 1. Upsert order — idempotent on stripe_session_id
+              const promoCode = session.metadata?.promo_code || null;
+              const discountCents = Number(session.metadata?.discount_cents ?? 0) || 0;
               const { data: orderRow, error: orderErr } = await supabaseAdmin
                 .from("orders")
                 .upsert(
@@ -125,6 +127,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                         ? session.payment_intent
                         : null,
                     status: "paid",
+                    promo_code: promoCode,
+                    discount_cents: discountCents,
                   },
                   { onConflict: "stripe_session_id" },
                 )
@@ -134,6 +138,11 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               if (orderErr || !orderRow) {
                 console.error("order upsert error", orderErr);
                 return Response.json({ received: true });
+              }
+
+              // Increment promo redemption once per order
+              if (promoCode && (await recordNotification(supabaseAdmin, orderRow.id as string, "promo_redeemed"))) {
+                await supabaseAdmin.rpc("increment_promo_redemption", { _code: promoCode });
               }
 
               const orderId = orderRow.id as string;
