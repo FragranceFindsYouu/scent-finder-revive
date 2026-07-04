@@ -1,5 +1,5 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createCartCheckoutSession } from "@/lib/checkout.functions";
 import type { CartItem } from "@/lib/cart";
@@ -10,15 +10,18 @@ export function StripeCartCheckout({
   returnUrl,
   insuranceOptIn,
   promoCode,
+  onComplete,
 }: {
   items: CartItem[];
   customerEmail?: string;
   returnUrl: string;
   insuranceOptIn?: boolean;
   promoCode?: string;
+  onComplete?: (sessionId: string) => void;
 }) {
   const stripePromise = useMemo(() => getStripe(), []);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   const fetchClientSecret = useCallback(async () => {
     try {
@@ -43,6 +46,8 @@ export function StripeCartCheckout({
       });
       if ("error" in result) throw new Error(result.error);
       if (!result.clientSecret) throw new Error("Stripe did not return a client secret");
+      // clientSecret shape: "cs_test_abc_secret_xyz" — session id is the prefix.
+      sessionIdRef.current = result.clientSecret.split("_secret_")[0] ?? null;
       setErrorMsg(null);
       return result.clientSecret;
     } catch (err) {
@@ -52,7 +57,15 @@ export function StripeCartCheckout({
     }
   }, [items, customerEmail, returnUrl, insuranceOptIn, promoCode]);
 
-  const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret]);
+  const options = useMemo(
+    () => ({
+      fetchClientSecret,
+      onComplete: () => {
+        if (sessionIdRef.current) onComplete?.(sessionIdRef.current);
+      },
+    }),
+    [fetchClientSecret, onComplete],
+  );
 
   if (errorMsg) {
     return (
@@ -77,3 +90,4 @@ export function StripeCartCheckout({
     </div>
   );
 }
+
