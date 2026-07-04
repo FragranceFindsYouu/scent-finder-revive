@@ -38,6 +38,53 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          customer_email: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          notification_type: string
+          order_id: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          customer_email: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          notification_type: string
+          order_id?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          customer_email?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          notification_type?: string
+          order_id?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       giveaway_entries: {
         Row: {
           created_at: string
@@ -165,9 +212,12 @@ export type Database = {
           created_at: string
           customer_email: string | null
           customer_name: string | null
+          discount_cents: number
           id: string
           items: Json
+          order_number: number
           payment_intent_id: string | null
+          promo_code: string | null
           refund_method: string | null
           refunded_amount_cents: number | null
           refunded_at: string | null
@@ -183,9 +233,12 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          discount_cents?: number
           id?: string
           items?: Json
+          order_number?: number
           payment_intent_id?: string | null
+          promo_code?: string | null
           refund_method?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
@@ -201,9 +254,12 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          discount_cents?: number
           id?: string
           items?: Json
+          order_number?: number
           payment_intent_id?: string | null
+          promo_code?: string | null
           refund_method?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
@@ -316,6 +372,54 @@ export type Database = {
           sort_order?: number
           tax_percent?: number | null
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          min_subtotal_cents: number
+          redemption_count: number
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          min_subtotal_cents?: number
+          redemption_count?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          min_subtotal_cents?: number
+          redemption_count?: number
+          starts_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -555,6 +659,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_promo_redemption: {
+        Args: { _code: string }
+        Returns: undefined
       }
       increment_variant_stock: {
         Args: { _qty: number; _variant_id: string }
