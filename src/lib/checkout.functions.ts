@@ -282,8 +282,10 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
 
         phone_number_collection: { enabled: true },
         ...(data.customerEmail && { customer_email: data.customerEmail }),
+        ...(promoCouponId && { discounts: [{ coupon: promoCouponId }] }),
         payment_intent_data: {
           description: `Fragrance Finds You — ${data.items.length} item${data.items.length === 1 ? "" : "s"}`,
+          ...(data.customerEmail && { receipt_email: data.customerEmail }),
         },
         metadata: {
           items: JSON.stringify(
@@ -300,6 +302,8 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           manual_tax_cents: String(manualTaxCents),
           insurance_cents: String(insuranceCents),
           insurance_opt_in: data.insuranceOptIn ? "yes" : "no",
+          promo_code: promoCodeApplied,
+          discount_cents: String(promoDiscountCents),
         },
       };
 
