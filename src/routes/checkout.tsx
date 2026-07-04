@@ -193,6 +193,14 @@ function CheckoutPage() {
                 returnUrl={returnUrl}
                 insuranceOptIn={insuranceOptIn}
                 promoCode={applied?.code}
+                onComplete={(sessionId) => {
+                  setCompleted({
+                    sessionId,
+                    items: [...items],
+                    totalCents: Math.max(0, estimatedTotalCents),
+                  });
+                  clear();
+                }}
               />
             </div>
           </div>
