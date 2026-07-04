@@ -132,6 +132,7 @@ function AdminOrdersPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-left text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             <tr>
+              <th className="px-4 py-3">Order #</th>
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Items</th>
@@ -142,12 +143,12 @@ function AdminOrdersPage() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading orders…</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading orders…</td>
               </tr>
             )}
             {!isLoading && (orders?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                   No orders yet. They'll appear here the moment a customer checks out.
                 </td>
               </tr>
@@ -160,6 +161,9 @@ function AdminOrdersPage() {
                   onClick={() => setSelected(o)}
                   className="cursor-pointer border-t border-border hover:bg-muted/20"
                 >
+                  <td className="px-4 py-3 font-mono text-primary font-medium">
+                    #{o.order_number ?? "—"}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {new Date(o.created_at).toLocaleString(undefined, {
                       month: "short",
@@ -174,6 +178,11 @@ function AdminOrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {totalQty} item{totalQty === 1 ? "" : "s"}
+                    {o.promo_code && (
+                      <div className="text-[10px] uppercase tracking-wider text-rose mt-0.5">
+                        {o.promo_code}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-rose font-medium">{money(o.total_amount_cents)}</td>
                   <td className="px-4 py-3">{statusPill(o.status)}</td>
