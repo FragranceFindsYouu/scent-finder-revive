@@ -264,6 +264,124 @@ function CheckoutPage() {
           </aside>
         </div>
       </div>
+      {completed && <ConfirmationModal completed={completed} />}
     </>
+  );
+}
+
+function ConfirmationModal({
+  completed,
+}: {
+  completed: { sessionId: string; items: CartItem[]; totalCents: number };
+}) {
+  // Poll for the order row so we can show the real order # + shipping address
+  // once the Stripe webhook lands (usually within a couple of seconds).
+  const { data } = useQuery({
+    queryKey: ["order-summary", completed.sessionId],
+    queryFn: () => getReviewTokenForSession({ data: { sessionId: completed.sessionId } }),
+    refetchInterval: (q) => (q.state.data?.order_number ? false : 1500),
+  });
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const address = (data?.shipping_address ?? {}) as Record<string, string | number | null | undefined>;
+  const name = data?.customer_name;
+  const email = data?.customer_email;
+  const totalCents = data?.total_cents ?? completed.totalCents;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bordeaux/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="relative w-full max-w-lg my-8 rounded-2xl border border-rose/30 bg-card shadow-2xl overflow-hidden">
+        <div className="bg-cream/50 px-8 pt-10 pb-8 text-center border-b border-rose/10">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-rose text-white">
+            <Check className="h-7 w-7" strokeWidth={2.5} />
+          </div>
+          <p className="mt-5 text-[10px] uppercase tracking-[0.4em] text-rose">Fragrance Finds You</p>
+          <h2 className="mt-2 font-display text-3xl text-primary">
+            Thank you{name ? `, ${name.split(" ")[0]}` : ""}!
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Your order is confirmed. A Stripe receipt is on its way to your email.
+          </p>
+        </div>
+
+        <div className="px-8 py-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Order</p>
+              <p className="mt-1 font-display text-2xl text-primary">
+                #{data?.order_number ?? <Loader2 className="inline h-5 w-5 animate-spin text-rose" />}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Total</p>
+              <p className="mt-1 font-display text-2xl text-rose">
+                ${(totalCents / 100).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <Package className="h-3.5 w-3.5" /> Items
+            </div>
+            <ul className="mt-2 divide-y divide-border">
+              {completed.items.map((i) => (
+                <li key={i.variant_id} className="py-2.5 flex justify-between gap-3 text-sm">
+                  <span className="flex-1 min-w-0">
+                    <span className="font-medium text-foreground">{i.title}</span>
+                    <span className="text-muted-foreground"> — {i.size}</span>
+                  </span>
+                  <span className="text-muted-foreground whitespace-nowrap">× {i.quantity}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {(address.line1 || name) && (
+            <div className="text-sm">
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" /> Shipping to
+              </div>
+              <p className="mt-2 text-foreground leading-relaxed">
+                {name}
+                {address.line1 && <><br />{address.line1}{address.line2 ? `, ${address.line2}` : ""}</>}
+                {(address.city || address.state || address.postal_code) && (
+                  <><br />{[address.city, address.state, address.postal_code].filter(Boolean).join(", ")}</>
+                )}
+              </p>
+            </div>
+          )}
+
+          {email && (
+            <p className="text-xs text-muted-foreground border-t border-border pt-4">
+              Confirmation sent to <span className="text-foreground">{email}</span>
+            </p>
+          )}
+        </div>
+
+        <div className="px-8 pb-8 flex flex-wrap gap-3 justify-center">
+          <Link
+            to="/checkout/return"
+            search={{ session_id: completed.sessionId }}
+            className="rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
+          >
+            View full order
+          </Link>
+          <Link
+            to="/catalog"
+            className="rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-rose hover:text-rose"
+          >
+            Continue shopping
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
