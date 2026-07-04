@@ -28,7 +28,7 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function CheckoutPage() {
-  const { items, subtotal } = useCart();
+  const { items, subtotal, clear } = useCart();
   const [insuranceOptIn, setInsuranceOptIn] = useState(false);
   const { data: shippingSettings } = useQuery(shippingSettingsQueryOptions);
   const validateFn = useServerFn(validatePromoCode);
@@ -36,6 +36,13 @@ function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("");
   const [applied, setApplied] = useState<Extract<ValidatePromoResult, { ok: true }> | null>(null);
   const [validating, setValidating] = useState(false);
+
+  // Snapshot of what was purchased (for the inline confirmation modal).
+  const [completed, setCompleted] = useState<{
+    sessionId: string;
+    items: CartItem[];
+    totalCents: number;
+  } | null>(null);
 
   const subtotalCents = Math.round(subtotal * 100);
 
