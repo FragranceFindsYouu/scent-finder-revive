@@ -71,7 +71,7 @@ function CheckoutPage() {
     setPromoInput("");
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !completed) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
         <EditableText id="checkout.empty.title" as="h1" className="font-display text-4xl text-primary">Your cart is empty</EditableText>
