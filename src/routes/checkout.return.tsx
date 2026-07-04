@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/lib/cart";
 import { getReviewTokenForSession } from "@/lib/reviews.functions";
-import { Check, Mail, MapPin, Package, Sparkles, Truck, Clock, Droplet, HelpCircle, Instagram } from "lucide-react";
+import { Check, Mail, MapPin, Package, Sparkles, Truck, Clock, Droplet, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/checkout/return")({
   head: () => ({
