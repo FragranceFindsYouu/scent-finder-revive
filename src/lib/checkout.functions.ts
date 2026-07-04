@@ -245,7 +245,6 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
         mode: "payment" as const,
         ui_mode: "embedded_page" as const,
         redirect_on_completion: "never" as const,
-        return_url: data.returnUrl,
         line_items: [
           ...productLineItems,
           ...(insuranceCents > 0
