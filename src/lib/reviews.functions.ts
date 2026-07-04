@@ -80,7 +80,14 @@ export type OrderSummary = {
   discount_cents: number | null;
   promo_code: string | null;
   items: Array<{ title: string; size: string; quantity: number; handle?: string }>;
-  shipping_address: Record<string, unknown> | null;
+  shipping_address: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+  } | null;
 };
 
 export const getReviewTokenForSession = createServerFn({ method: "GET" })
@@ -107,7 +114,7 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
       discount_cents?: number | null;
       promo_code?: string | null;
       items?: OrderSummary["items"];
-      shipping_address?: Record<string, unknown> | null;
+      shipping_address?: OrderSummary["shipping_address"];
     } | null;
     return {
       token: o?.review_token ?? null,
