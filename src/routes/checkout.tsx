@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useCart } from "@/lib/cart";
+import { useEffect, useState } from "react";
+import { useCart, type CartItem } from "@/lib/cart";
 import { StripeCartCheckout } from "@/components/StripeCartCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ShippingNotice } from "@/components/ShippingNotice";
@@ -13,8 +13,9 @@ import {
   shippingSettingsQueryOptions,
 } from "@/lib/shipping";
 import { validatePromoCode, type ValidatePromoResult } from "@/lib/promo.functions";
+import { getReviewTokenForSession } from "@/lib/reviews.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Tag, X } from "lucide-react";
+import { Check, Loader2, MapPin, Package, Tag, X } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
