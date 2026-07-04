@@ -27,6 +27,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       customerEmail?: string;
       environment: StripeEnv;
       insuranceOptIn?: boolean;
+      promoCode?: string;
     }) => {
       if (!Array.isArray(data.items) || data.items.length === 0) {
         throw new Error("Cart is empty");
