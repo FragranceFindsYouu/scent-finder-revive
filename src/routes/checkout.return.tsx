@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/lib/cart";
 import { getReviewTokenForSession } from "@/lib/reviews.functions";
-import { Check, Mail, MapPin, Package, Sparkles } from "lucide-react";
+import { Check, Mail, MapPin, Package, Sparkles, Truck, Clock, Droplet, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/checkout/return")({
   head: () => ({
@@ -141,13 +141,71 @@ function CheckoutReturn() {
         </div>
       )}
 
-      <div className="mt-10 text-center">
+      {/* What happens next */}
+      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        {[
+          { icon: Package, title: "We're hand-pouring your decants", body: "Every bottle is filled to order in the studio — usually within 1–2 business days." },
+          { icon: Truck, title: "Then it ships", body: "You'll get a tracking email as soon as your parcel is on the way. Delivery is typically 3–7 business days." },
+          { icon: Clock, title: "Watch your inbox", body: "A Stripe receipt lands right away. Order updates and tracking come from Fragrancefindsyouu@gmail.com." },
+        ].map((c, i) => (
+          <div key={i} className="rounded-2xl border border-border/60 bg-cream/40 p-6">
+            <c.icon className="h-5 w-5 text-rose" />
+            <p className="mt-3 font-display text-lg text-primary">{c.title}</p>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{c.body}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Care + tips */}
+      <div className="mt-8 rounded-2xl border border-rose/20 bg-white/60 p-8">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-rose">
+          <Droplet className="h-3.5 w-3.5" /> A little love note for your decants
+        </div>
+        <ul className="mt-4 space-y-2 text-sm text-muted-foreground leading-relaxed">
+          <li>• Store away from heat and direct sunlight — a drawer or closet shelf is perfect.</li>
+          <li>• Spray on pulse points (wrists, neck, behind the ears) after moisturizing for the longest wear.</li>
+          <li>• Give the fragrance a moment — top notes fade in the first 10–15 minutes and the true scent blooms after.</li>
+        </ul>
+      </div>
+
+      {/* Help */}
+      <div className="mt-8 rounded-2xl border border-border/60 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <HelpCircle className="h-5 w-5 text-rose mt-0.5" />
+          <div>
+            <p className="font-display text-lg text-primary">Need anything?</p>
+            <p className="text-sm text-muted-foreground">
+              Reply to your receipt or email{" "}
+              <a href="mailto:Fragrancefindsyouu@gmail.com" className="text-rose hover:underline">
+                Fragrancefindsyouu@gmail.com
+              </a>
+              . Joan reads every message.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/contact"
+          className="rounded-full border border-border px-5 py-2.5 text-xs uppercase tracking-[0.2em] hover:border-rose hover:text-rose"
+        >
+          Contact
+        </Link>
+      </div>
+
+      <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
         <Link
           to="/catalog"
           className="inline-flex rounded-full bg-primary text-primary-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-rose"
         >
           Continue shopping
         </Link>
+        <a
+          href="https://www.instagram.com/fragrancefindsyou"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] hover:border-rose hover:text-rose"
+        >
+          Follow @fragrancefindsyou
+        </a>
       </div>
     </div>
   );
