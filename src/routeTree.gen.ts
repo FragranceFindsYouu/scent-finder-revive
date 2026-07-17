@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
@@ -71,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CheckoutRoute,
 } as any)
 const ReviewTokenRoute = ReviewTokenRouteImport.update({
   id: '/review/$token',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -185,7 +192,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -195,6 +201,7 @@ export interface FileRoutesByTo {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout': typeof CheckoutIndexRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -221,6 +228,7 @@ export interface FileRoutesById {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/_authenticated/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -247,6 +255,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout/'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -261,7 +270,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
-    | '/checkout'
     | '/contact'
     | '/sitemap.xml'
     | '/admin-dashboard'
@@ -271,6 +279,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout/'
     | '/_authenticated/admin/giveaways'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/promo-codes'
@@ -380,6 +390,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/checkout/': {
+      id: '/checkout/'
+      path: '/'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof CheckoutIndexRouteImport
+      parentRoute: typeof CheckoutRoute
     }
     '/review/$token': {
       id: '/review/$token'
@@ -516,10 +533,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface CheckoutRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  CheckoutIndexRoute: typeof CheckoutIndexRoute
 }
 
 const CheckoutRouteChildren: CheckoutRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
+  CheckoutIndexRoute: CheckoutIndexRoute,
 }
 
 const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(

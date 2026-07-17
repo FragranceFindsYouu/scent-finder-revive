@@ -98,13 +98,97 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<OrderSummary> => {
     const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
-    const { data: order } = await supabaseAdmin
+    let { data: order } = await supabaseAdmin
       .from("orders")
       .select(
         "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, items, shipping_address",
       )
       .eq("stripe_session_id", data.sessionId)
       .maybeSingle();
+
+    // The customer can return before the webhook arrives. Verify the Checkout
+    // Session directly and create the paid order idempotently so confirmation
+    // details always appear immediately instead of leaving an empty page.
+    if (!order) {
+      try {
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const environment = data.sessionId.startsWith("cs_live_") ? "live" : "sandbox";
+        const stripe = createStripeClient(environment);
+        const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
+          expand: ["line_items"],
+        });
+
+        if (session.payment_status === "paid" || session.payment_status === "no_payment_required") {
+          type ConfirmationItem = { title: string; size: string; quantity: number; handle?: string; variantId?: string };
+          let items: ConfirmationItem[] = [];
+          const rawItems = session.metadata?.items;
+          if (rawItems) {
+            try {
+              const parsed = JSON.parse(rawItems) as Array<{
+                t?: string;
+                s?: string;
+                q?: number;
+                h?: string;
+                v?: string;
+              }>;
+              items = parsed.map((item) => ({
+                title: item.t ?? "Item",
+                size: item.s ?? "",
+                quantity: Number(item.q) || 1,
+                handle: item.h ?? "",
+                variantId: item.v ?? "",
+              }));
+            } catch {
+              items = [];
+            }
+          }
+          if (items.length === 0) {
+            items = (session.line_items?.data ?? []).map((item) => {
+              const parts = (item.description ?? "Item").split(" — ");
+              return {
+                title: parts[0] || "Item",
+                size: parts.slice(1).join(" — "),
+                quantity: item.quantity ?? 1,
+              };
+            });
+          }
+
+          const sessionWithShipping = session as typeof session & {
+            shipping_details?: {
+              name?: string | null;
+              address?: Record<string, unknown> | null;
+            } | null;
+          };
+          const details = session.customer_details;
+          const shipping = sessionWithShipping.shipping_details;
+          const { data: created } = await supabaseAdmin
+            .from("orders")
+            .upsert(
+              {
+                stripe_session_id: session.id,
+                customer_email: details?.email ?? session.customer_email ?? null,
+                customer_name: shipping?.name ?? details?.name ?? null,
+                shipping_address: shipping?.address ?? details?.address ?? null,
+                items,
+                total_amount_cents: session.amount_total ?? null,
+                payment_intent_id:
+                  typeof session.payment_intent === "string" ? session.payment_intent : null,
+                status: "paid",
+                promo_code: session.metadata?.promo_code || null,
+                discount_cents: Number(session.metadata?.discount_cents ?? 0) || 0,
+              },
+              { onConflict: "stripe_session_id" },
+            )
+            .select(
+              "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, items, shipping_address",
+            )
+            .single();
+          order = created;
+        }
+      } catch (error) {
+        console.error("Unable to load checkout confirmation", error);
+      }
+    }
     const o = order as {
       review_token?: string;
       order_number?: number;
