@@ -244,7 +244,9 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       const baseSession = {
         mode: "payment" as const,
         ui_mode: "embedded_page" as const,
-        redirect_on_completion: "never" as const,
+        // Cash App requires a redirect on completion, so we let Stripe redirect
+        // to `return_url` (default behavior) and show the themed confirmation
+        // page at /checkout/return.
         line_items: [
           ...productLineItems,
           ...(insuranceCents > 0
