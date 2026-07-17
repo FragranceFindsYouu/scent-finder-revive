@@ -153,8 +153,14 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
             });
           }
 
+          const sessionWithShipping = session as typeof session & {
+            shipping_details?: {
+              name?: string | null;
+              address?: Record<string, unknown> | null;
+            } | null;
+          };
           const details = session.customer_details;
-          const shipping = session.shipping_details;
+          const shipping = sessionWithShipping.shipping_details;
           const { data: created } = await supabaseAdmin
             .from("orders")
             .upsert(
