@@ -244,9 +244,7 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
       const baseSession = {
         mode: "payment" as const,
         ui_mode: "embedded_page" as const,
-        // Cash App requires a redirect on completion, so we let Stripe redirect
-        // to `return_url` (default behavior) and show the themed confirmation
-        // page at /checkout/return.
+        return_url: data.returnUrl,
         line_items: [
           ...productLineItems,
           ...(insuranceCents > 0
@@ -321,12 +319,12 @@ export const createCartCheckoutSession = createServerFn({ method: "POST" })
           : taxMode === "calculate"
             ? {
                 ...baseSession,
-                payment_method_types: ["card", "cashapp", "klarna"] as Array<"card">,
+                payment_method_types: ["card", "klarna"] as Array<"card">,
                 automatic_tax: { enabled: true },
               }
             : {
                 ...baseSession,
-                payment_method_types: ["card", "cashapp", "klarna"] as Array<"card">,
+                payment_method_types: ["card", "klarna"] as Array<"card">,
               };
 
       const session = await stripe.checkout.sessions.create(
