@@ -17,7 +17,7 @@ import { getReviewTokenForSession } from "@/lib/reviews.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Loader2, MapPin, Package, Tag, X } from "lucide-react";
 
-export const Route = createFileRoute("/checkout")({
+export const Route = createFileRoute("/checkout/")({
   head: () => ({
     meta: [
       { title: "Checkout — Fragrance Finds You" },

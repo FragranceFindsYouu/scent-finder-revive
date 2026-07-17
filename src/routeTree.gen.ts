@@ -11,12 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
@@ -43,11 +43,6 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutRoute = CheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CatalogRoute = CatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
@@ -72,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
+  id: '/checkout/',
+  path: '/checkout/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewTokenRoute = ReviewTokenRouteImport.update({
   id: '/review/$token',
   path: '/review/$token',
@@ -93,9 +93,9 @@ const CollectionsSplatRoute = CollectionsSplatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
-  id: '/return',
-  path: '/return',
-  getParentRoute: () => CheckoutRoute,
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
@@ -161,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -171,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -185,7 +185,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -195,6 +194,7 @@ export interface FileRoutesByTo {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout': typeof CheckoutIndexRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -211,7 +211,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/catalog': typeof CatalogRoute
-  '/checkout': typeof CheckoutRouteWithChildren
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -221,6 +220,7 @@ export interface FileRoutesById {
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
+  '/checkout/': typeof CheckoutIndexRoute
   '/_authenticated/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -237,7 +237,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
-    | '/checkout'
     | '/contact'
     | '/sitemap.xml'
     | '/admin-dashboard'
@@ -247,6 +246,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout/'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -261,7 +261,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
-    | '/checkout'
     | '/contact'
     | '/sitemap.xml'
     | '/admin-dashboard'
@@ -271,6 +270,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -286,7 +286,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/catalog'
-    | '/checkout'
     | '/contact'
     | '/sitemap.xml'
     | '/_authenticated/admin-dashboard'
@@ -296,6 +295,7 @@ export interface FileRouteTypes {
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
+    | '/checkout/'
     | '/_authenticated/admin/giveaways'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/promo-codes'
@@ -312,14 +312,15 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   CatalogRoute: typeof CatalogRoute
-  CheckoutRoute: typeof CheckoutRouteWithChildren
   ContactRoute: typeof ContactRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   CollectionsSplatRoute: typeof CollectionsSplatRoute
   PagesSlugRoute: typeof PagesSlugRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
   ReviewTokenRoute: typeof ReviewTokenRoute
+  CheckoutIndexRoute: typeof CheckoutIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -337,13 +338,6 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/catalog': {
@@ -381,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/': {
+      id: '/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof CheckoutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review/$token': {
       id: '/review/$token'
       path: '/review/$token'
@@ -411,10 +412,10 @@ declare module '@tanstack/react-router' {
     }
     '/checkout/return': {
       id: '/checkout/return'
-      path: '/return'
+      path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
-      parentRoute: typeof CheckoutRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
       id: '/api/chat'
@@ -514,32 +515,21 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface CheckoutRouteChildren {
-  CheckoutReturnRoute: typeof CheckoutReturnRoute
-}
-
-const CheckoutRouteChildren: CheckoutRouteChildren = {
-  CheckoutReturnRoute: CheckoutReturnRoute,
-}
-
-const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
-  CheckoutRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   CatalogRoute: CatalogRoute,
-  CheckoutRoute: CheckoutRouteWithChildren,
   ContactRoute: ContactRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   CollectionsSplatRoute: CollectionsSplatRoute,
   PagesSlugRoute: PagesSlugRoute,
   ProductsHandleRoute: ProductsHandleRoute,
   ReviewTokenRoute: ReviewTokenRoute,
+  CheckoutIndexRoute: CheckoutIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
