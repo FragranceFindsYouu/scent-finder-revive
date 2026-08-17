@@ -98,8 +98,18 @@ function CheckoutReturn() {
                 {((data.discount_cents ?? 0) / 100).toFixed(2)}.
               </p>
             )}
+            {data?.insured && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Shipping insurance included
+                {(data.insurance_cents ?? 0) > 0
+                  ? ` — $${((data.insurance_cents ?? 0) / 100).toFixed(2)}`
+                  : ""}
+                . Lost or damaged parcels are replaced or refunded.
+              </p>
+            )}
           </div>
         )}
+
 
         {(address.line1 || address.city) && (
           <div className="border-t border-rose/10 px-6 py-5 text-sm">

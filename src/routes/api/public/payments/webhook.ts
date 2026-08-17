@@ -129,6 +129,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                     status: "paid",
                     promo_code: promoCode,
                     discount_cents: discountCents,
+                    insurance_cents: Number(session.metadata?.insurance_cents ?? 0) || 0,
+                    insurance_opt_in: session.metadata?.insurance_opt_in === "yes",
                   },
                   { onConflict: "stripe_session_id" },
                 )
