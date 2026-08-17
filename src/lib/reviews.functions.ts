@@ -79,6 +79,8 @@ export type OrderSummary = {
   total_cents: number | null;
   discount_cents: number | null;
   promo_code: string | null;
+  insurance_cents: number | null;
+  insured: boolean;
   items: Array<{ title: string; size: string; quantity: number; handle?: string }>;
   shipping_address: {
     line1?: string;
@@ -101,7 +103,7 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
     let { data: order } = await supabaseAdmin
       .from("orders")
       .select(
-        "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, items, shipping_address",
+        "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, insurance_cents, insurance_opt_in, items, shipping_address",
       )
       .eq("stripe_session_id", data.sessionId)
       .maybeSingle();
@@ -176,11 +178,13 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
                 status: "paid",
                 promo_code: session.metadata?.promo_code || null,
                 discount_cents: Number(session.metadata?.discount_cents ?? 0) || 0,
+                insurance_cents: Number(session.metadata?.insurance_cents ?? 0) || 0,
+                insurance_opt_in: session.metadata?.insurance_opt_in === "yes",
               },
               { onConflict: "stripe_session_id" },
             )
             .select(
-              "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, items, shipping_address",
+              "review_token, order_number, customer_email, customer_name, total_amount_cents, discount_cents, promo_code, insurance_cents, insurance_opt_in, items, shipping_address",
             )
             .single();
           order = created;
@@ -197,6 +201,8 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
       total_amount_cents?: number | null;
       discount_cents?: number | null;
       promo_code?: string | null;
+      insurance_cents?: number | null;
+      insurance_opt_in?: boolean | null;
       items?: OrderSummary["items"];
       shipping_address?: OrderSummary["shipping_address"];
     } | null;
@@ -208,6 +214,8 @@ export const getReviewTokenForSession = createServerFn({ method: "GET" })
       total_cents: o?.total_amount_cents ?? null,
       discount_cents: o?.discount_cents ?? null,
       promo_code: o?.promo_code ?? null,
+      insurance_cents: o?.insurance_cents ?? null,
+      insured: Boolean(o?.insurance_opt_in) || (o?.insurance_cents ?? 0) > 0,
       items: o?.items ?? [],
       shipping_address: o?.shipping_address ?? null,
     };
