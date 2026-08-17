@@ -214,6 +214,8 @@ export type Database = {
           customer_name: string | null
           discount_cents: number
           id: string
+          insurance_cents: number
+          insurance_opt_in: boolean
           items: Json
           order_number: number
           payment_intent_id: string | null
@@ -235,6 +237,8 @@ export type Database = {
           customer_name?: string | null
           discount_cents?: number
           id?: string
+          insurance_cents?: number
+          insurance_opt_in?: boolean
           items?: Json
           order_number?: number
           payment_intent_id?: string | null
@@ -256,6 +260,8 @@ export type Database = {
           customer_name?: string | null
           discount_cents?: number
           id?: string
+          insurance_cents?: number
+          insurance_opt_in?: boolean
           items?: Json
           order_number?: number
           payment_intent_id?: string | null
