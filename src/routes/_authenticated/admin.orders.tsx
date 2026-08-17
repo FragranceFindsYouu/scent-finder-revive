@@ -183,6 +183,11 @@ function AdminOrdersPage() {
                         {o.promo_code}
                       </div>
                     )}
+                    {(o.insurance_opt_in || (o.insurance_cents ?? 0) > 0) && (
+                      <div className="text-[10px] uppercase tracking-wider text-green-700 mt-0.5">
+                        Insured {money(o.insurance_cents)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-rose font-medium">{money(o.total_amount_cents)}</td>
                   <td className="px-4 py-3">{statusPill(o.status)}</td>

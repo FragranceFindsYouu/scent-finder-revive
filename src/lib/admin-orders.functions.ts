@@ -17,6 +17,8 @@ export type AdminOrder = {
   total_amount_cents: number | null;
   discount_cents: number | null;
   promo_code: string | null;
+  insurance_cents: number | null;
+  insurance_opt_in: boolean | null;
   payment_intent_id: string | null;
   status: string;
   created_at: string;
@@ -41,7 +43,7 @@ export const listOrdersAdmin = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("orders")
       .select(
-        "id, order_number, stripe_session_id, customer_email, customer_name, shipping_address, items, total_amount_cents, discount_cents, promo_code, payment_intent_id, status, created_at, refunded_at, cancelled_at, refund_method, refunded_amount_cents",
+        "id, order_number, stripe_session_id, customer_email, customer_name, shipping_address, items, total_amount_cents, discount_cents, promo_code, insurance_cents, insurance_opt_in, payment_intent_id, status, created_at, refunded_at, cancelled_at, refund_method, refunded_amount_cents",
       )
       .order("created_at", { ascending: false })
       .limit(200);
