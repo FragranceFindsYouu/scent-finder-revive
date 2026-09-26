@@ -134,7 +134,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                   },
                   { onConflict: "stripe_session_id" },
                 )
-                .select("id, status")
+                .select("id, status, order_number")
                 .single();
 
               if (orderErr || !orderRow) {
@@ -183,9 +183,31 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                 }
               }
 
-              // 4. TODO (email): when email domain is configured, enqueue
-              //    "order-confirmation" → customer and "new-order-alert" → admins.
-              //    Idempotency keys: order:{id}:confirmation and order:{id}:admin-alert.
+              // 4. Send branded order-confirmation email (idempotent per order)
+              if (email && (await recordNotification(supabaseAdmin, orderId, "confirmation_email"))) {
+                try {
+                  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+                  const result = await sendTemplateEmail("order-confirmation", email, {
+                    idempotencyKey: `order:${orderId}:confirmation`,
+                    templateData: {
+                      customerName: name ?? undefined,
+                      orderNumber: (orderRow as { order_number?: number }).order_number,
+                      items,
+                      totalCents: session.amount_total ?? undefined,
+                      shippingName: session.shipping_details?.name ?? undefined,
+                      shippingAddress:
+                        (session.shipping_details?.address as Record<string, string> | null) ??
+                        undefined,
+                      insuranceOptIn: session.metadata?.insurance_opt_in === "yes",
+                    },
+                  });
+                  if (!result.sent) {
+                    console.log("confirmation email suppressed for", orderId, result.reason);
+                  }
+                } catch (e) {
+                  console.error("confirmation email failed", e);
+                }
+              }
             }
           }
 

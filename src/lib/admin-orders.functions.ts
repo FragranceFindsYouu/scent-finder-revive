@@ -230,3 +230,51 @@ export const refundOrderCustomAdmin = createServerFn({ method: "POST" })
     return { ok: true, status: isFull ? "refunded" : "partial_refund", storeCreditCode };
   });
 
+// ---------------------------------------------------------------------------
+// Resend the branded order-confirmation email to the customer
+// ---------------------------------------------------------------------------
+export const resendConfirmationEmailAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orderId: string }) => {
+    if (!data.orderId || !/^[0-9a-f-]{36}$/i.test(data.orderId)) {
+      throw new Error("Invalid input");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+    await assertAdmin(context);
+
+    const { supabaseAdmin: _sa } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = _sa as unknown as { from: (t: string) => any };
+
+    const { data: order, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .select("id, order_number, customer_email, customer_name, shipping_address, items, total_amount_cents, insurance_opt_in")
+      .eq("id", data.orderId)
+      .single();
+    if (orderErr || !order) return { error: "Order not found" };
+    if (!order.customer_email) return { error: "Order has no customer email" };
+
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const addr = (order.shipping_address ?? {}) as Record<string, string>;
+      const result = await sendTemplateEmail("order-confirmation", order.customer_email, {
+        // Fresh key each resend so it isn't deduped against the original send
+        idempotencyKey: `order:${order.id}:confirmation:resend:${Date.now()}`,
+        templateData: {
+          customerName: order.customer_name ?? undefined,
+          orderNumber: order.order_number ?? undefined,
+          items: order.items ?? [],
+          totalCents: order.total_amount_cents ?? undefined,
+          shippingName: order.customer_name ?? undefined,
+          shippingAddress: addr,
+          insuranceOptIn: !!order.insurance_opt_in,
+        },
+      });
+      if (!result.sent) return { error: "Customer has unsubscribed or their address is blocked" };
+      return { ok: true };
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+  });
+

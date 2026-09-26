@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   listOrdersAdmin,
   refundOrderCustomAdmin,
+  resendConfirmationEmailAdmin,
   type AdminOrder,
 } from "@/lib/admin-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -53,6 +54,22 @@ function AdminOrdersPage() {
   const { isAdmin, ready } = useIsAdmin();
   const listFn = useServerFn(listOrdersAdmin);
   const refundFn = useServerFn(refundOrderCustomAdmin);
+  const resendEmailFn = useServerFn(resendConfirmationEmailAdmin);
+  const [resending, setResending] = useState(false);
+
+  const handleResendEmail = async () => {
+    if (!selected) return;
+    setResending(true);
+    try {
+      const res = await resendEmailFn({ data: { orderId: selected.id } });
+      if ("error" in res) toast.error(res.error);
+      else toast.success("Confirmation email sent to the customer.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setResending(false);
+    }
+  };
   const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
@@ -332,6 +349,13 @@ function AdminOrdersPage() {
                     Stock ran out before this order could be reserved. Contact the customer to confirm fulfillment or refund.
                   </p>
                 )}
+                <button
+                  onClick={handleResendEmail}
+                  disabled={resending || !selected.customer_email}
+                  className="w-full rounded-full border border-border px-6 py-3 text-xs uppercase tracking-[0.2em] text-foreground hover:bg-muted disabled:opacity-50"
+                >
+                  {resending ? "Sending…" : "Resend confirmation email"}
+                </button>
               </div>
             </>
           )}
