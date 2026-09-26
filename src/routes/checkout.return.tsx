@@ -105,6 +105,14 @@ function CheckoutReturn() {
                   ? ` — $${((data.insurance_cents ?? 0) / 100).toFixed(2)}`
                   : ""}
                 . Lost or damaged parcels are replaced or refunded.
+                {token && (
+                  <>
+                    {" "}
+                    <Link to="/claim/$token" params={{ token }} className="text-rose underline">
+                      Report a problem
+                    </Link>
+                  </>
+                )}
               </p>
             )}
           </div>
