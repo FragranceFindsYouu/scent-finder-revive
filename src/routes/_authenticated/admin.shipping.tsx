@@ -152,7 +152,7 @@ function AdminShipping() {
               <Field label="Flat insurance fee (USD)" prefix="$">
                 <input value={insFlat} onChange={(e) => setInsFlat(e.target.value)} className={inputCls} inputMode="decimal" />
               </Field>
-              <Field label="Percent of cart (%)">
+              <Field label="Percent of cart (%) — set flat to $0 to price by order value only">
                 <input value={insPercent} onChange={(e) => setInsPercent(e.target.value)} className={inputCls} inputMode="decimal" />
               </Field>
               <div className="md:col-span-2">

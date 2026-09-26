@@ -159,6 +159,53 @@ export type Database = {
         }
         Relationships: []
       }
+      insurance_claims: {
+        Row: {
+          admin_notes: string
+          claim_type: string
+          created_at: string
+          description: string
+          id: string
+          order_id: string
+          photo_url: string | null
+          resolution: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string
+          claim_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          order_id: string
+          photo_url?: string | null
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string
+          claim_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          order_id?: string
+          photo_url?: string | null
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string

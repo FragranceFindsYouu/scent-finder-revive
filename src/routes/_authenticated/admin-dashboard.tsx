@@ -460,6 +460,12 @@ function AdminDashboard() {
             Shipping
           </Link>
           <Link
+            to="/admin/claims"
+            className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
+          >
+            Insurance claims
+          </Link>
+          <Link
             to="/admin/tax"
             className="rounded-full border border-primary text-primary px-6 py-3 text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground"
           >
