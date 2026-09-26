@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   listOrdersAdmin,
   refundOrderCustomAdmin,
+  resendConfirmationEmailAdmin,
   type AdminOrder,
 } from "@/lib/admin-orders.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
