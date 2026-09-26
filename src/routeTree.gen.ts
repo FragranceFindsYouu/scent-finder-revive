@@ -22,6 +22,7 @@ import { Route as ReviewTokenRouteImport } from './routes/review.$token'
 import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 import { Route as CollectionsSplatRouteImport } from './routes/collections.$'
+import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin-dashboard'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedAdminPromotionsRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminPromoCodesRouteImport } from './routes/_authenticated/admin.promo-codes'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminGiveawaysRouteImport } from './routes/_authenticated/admin.giveaways'
+import { Route as AuthenticatedAdminClaimsRouteImport } from './routes/_authenticated/admin.claims'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -99,6 +101,11 @@ const CollectionsSplatRoute = CollectionsSplatRouteImport.update({
   path: '/collections/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClaimTokenRoute = ClaimTokenRouteImport.update({
+  id: '/claim/$token',
+  path: '/claim/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
@@ -156,6 +163,12 @@ const AuthenticatedAdminGiveawaysRoute =
     path: '/admin/giveaways',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminClaimsRoute =
+  AuthenticatedAdminClaimsRouteImport.update({
+    id: '/admin/claims',
+    path: '/admin/claims',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -180,11 +193,13 @@ export interface FileRoutesByFullPath {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/collections/$': typeof CollectionsSplatRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/checkout/': typeof CheckoutIndexRoute
+  '/admin/claims': typeof AuthenticatedAdminClaimsRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -205,11 +220,13 @@ export interface FileRoutesByTo {
   '/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/collections/$': typeof CollectionsSplatRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/checkout': typeof CheckoutIndexRoute
+  '/admin/claims': typeof AuthenticatedAdminClaimsRoute
   '/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -233,11 +250,13 @@ export interface FileRoutesById {
   '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/collections/$': typeof CollectionsSplatRoute
   '/pages/$slug': typeof PagesSlugRoute
   '/products/$handle': typeof ProductsHandleRoute
   '/review/$token': typeof ReviewTokenRoute
   '/checkout/': typeof CheckoutIndexRoute
+  '/_authenticated/admin/claims': typeof AuthenticatedAdminClaimsRoute
   '/_authenticated/admin/giveaways': typeof AuthenticatedAdminGiveawaysRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
@@ -261,11 +280,13 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/claim/$token'
     | '/collections/$'
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/checkout/'
+    | '/admin/claims'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -286,11 +307,13 @@ export interface FileRouteTypes {
     | '/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/claim/$token'
     | '/collections/$'
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/checkout'
+    | '/admin/claims'
     | '/admin/giveaways'
     | '/admin/orders'
     | '/admin/promo-codes'
@@ -313,11 +336,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-dashboard'
     | '/api/chat'
     | '/checkout/return'
+    | '/claim/$token'
     | '/collections/$'
     | '/pages/$slug'
     | '/products/$handle'
     | '/review/$token'
     | '/checkout/'
+    | '/_authenticated/admin/claims'
     | '/_authenticated/admin/giveaways'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/promo-codes'
@@ -339,6 +364,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  ClaimTokenRoute: typeof ClaimTokenRoute
   CollectionsSplatRoute: typeof CollectionsSplatRoute
   PagesSlugRoute: typeof PagesSlugRoute
   ProductsHandleRoute: typeof ProductsHandleRoute
@@ -440,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/claim/$token': {
+      id: '/claim/$token'
+      path: '/claim/$token'
+      fullPath: '/claim/$token'
+      preLoaderRoute: typeof ClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/return'
@@ -510,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminGiveawaysRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/claims': {
+      id: '/_authenticated/admin/claims'
+      path: '/admin/claims'
+      fullPath: '/admin/claims'
+      preLoaderRoute: typeof AuthenticatedAdminClaimsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -529,6 +569,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminClaimsRoute: typeof AuthenticatedAdminClaimsRoute
   AuthenticatedAdminGiveawaysRoute: typeof AuthenticatedAdminGiveawaysRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPromoCodesRoute: typeof AuthenticatedAdminPromoCodesRoute
@@ -540,6 +581,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminClaimsRoute: AuthenticatedAdminClaimsRoute,
   AuthenticatedAdminGiveawaysRoute: AuthenticatedAdminGiveawaysRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPromoCodesRoute: AuthenticatedAdminPromoCodesRoute,
@@ -576,6 +618,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  ClaimTokenRoute: ClaimTokenRoute,
   CollectionsSplatRoute: CollectionsSplatRoute,
   PagesSlugRoute: PagesSlugRoute,
   ProductsHandleRoute: ProductsHandleRoute,
